@@ -1,0 +1,9 @@
+[package]
+name = "protocol_manager"
+version = "0.1.0"
+authors = ["kibbles <colindjk@gmail.com>"]
+
+[dependencies]
+futures = "0.1.4"
+tokio-core = "0.1.1"
+tokio-proto= { git = "https://github.com/tokio-rs/tokio-proto" }
