@@ -9,3 +9,4 @@ tokio-core = "0.1.1"
 tokio-service = { git = "https://github.com/tokio-rs/tokio-service" }
 tokio-proto= { git = "https://github.com/tokio-rs/tokio-proto" }
 tiny_http = "0.5"
+maud = "0.14.0"
