@@ -7,7 +7,7 @@ extern crate maud;
 
 mod server;
 mod client;
-mod message;
+mod frames;
 
 #[cfg(test)]
 mod tests {
