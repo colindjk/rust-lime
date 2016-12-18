@@ -8,5 +8,5 @@ futures = "0.1.4"
 tokio-core = "0.1.1"
 tokio-service = { git = "https://github.com/tokio-rs/tokio-service" }
 tokio-proto= { git = "https://github.com/tokio-rs/tokio-proto" }
-tiny_http = "0.5"
+tokio-minihttp = { git = "https://github.com/tokio-rs/tokio-minihttp" }
 maud = "0.14.0"
