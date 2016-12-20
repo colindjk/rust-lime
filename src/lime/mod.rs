@@ -1,4 +1,7 @@
 
+/// -- Global Constants --
+static DELIMITER : u8 = b'\n' as u8;
+
 pub use self::message::{
     Request,
     Response,
@@ -6,4 +9,4 @@ pub use self::message::{
 };
 
 pub mod message;
-pub mod message_stream;
+pub mod envelope;

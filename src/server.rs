@@ -1,9 +1,10 @@
-use futures::Future;
-use tokio::reactor;
-use tokio_service::Service;
+//use futures::Future;
+//use tokio::reactor;
+//use tokio_service::Service;
 
-use frames::message::{ Request, Response, Error };
+//use frames::message::{ Request, Response, Error };
 
 /// Server which will exist for every interaction...?
+#[allow(dead_code)]
 pub struct Server;
 
