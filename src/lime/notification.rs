@@ -1,5 +1,7 @@
 use serde_json::{ Map, Value };
 
+struct Notification { map: Map<String, Value> }
+
 /// Signifies the event which pertains to a previously dealt with message.
 /// Uses 'id' from sent message to determine which one should happen.
 /// TODO: Unique set of 'id's per user or nah?
@@ -19,9 +21,5 @@ pub enum NotificationEvent {
 pub struct Reason {
     code: u8,
     description: String
-}
-
-struct Notification {
-    map: Map<String, Value>
 }
 
