@@ -21,6 +21,7 @@ pub type TimeStamp = u64;
 
 /// Trait for all envelope related types.
 /// TODO: Include 'pp' and 'metadata'
+/// TODO: Convert to MIME
 pub trait Envelope {
     type Ty;
 

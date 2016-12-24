@@ -4,9 +4,8 @@ use lime::envelope::*;
 
 // TODO: How to parse the session? seems real complicated currently. 
 
-pub struct Session {
-    map: Map<String, Value>,
-
+/// Sent by server, contains options for authentication
+pub struct SessionRequest {
     to: Option<Node>,
     from: Option<Node>, // mandatory for clients during auth
     pp: Option<Node>,
@@ -14,21 +13,25 @@ pub struct Session {
     metadata: Option<Value>,
 
     state: SessionState,
-    negotiation: Option<Negotiation>, // present during... negotiation
+
+    #[serde(rename="encryptionOptions")]
+    encryption_options: Option<Vec<String>>,
+    #[serde(rename="compressionOptions")]
+    compression_options: Option<Vec<String>>,
+    #[serde(rename="schemeOptions")]
+    scheme_options: Option<Vec<Value>>,
 }
 
-enum Negotiation {
-    Request(SessionOptions),
-    Response(SessionResponse),
-}
+/// Sent by server, contains options for authentication
+pub struct SessionResponse {
+    to: Option<Node>,
+    from: Option<Node>, // mandatory for clients during auth
+    pp: Option<Node>,
+    id: MsgID,
+    metadata: Option<Value>,
 
-struct SessionOptions {
-    encryption: Vec<String>,
-    compression: Vec<String>,
-    scheme: Vec<Value>,
-}
+    state: SessionState,
 
-struct SessionResponse {
     encryption: Option<String>,
     compression: Option<String>,
     scheme: Option<Value>,

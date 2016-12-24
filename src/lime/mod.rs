@@ -12,7 +12,7 @@ pub mod session;
 use self::message::Message;
 use self::notification::Notification;
 use self::command::Command;
-use self::session::Session;
+use self::session::*;
 
 /// Outlines the kinds of envelopes one can receive.
 /// TODO: Figure out if values as '&str' efficient / possible / worth.
@@ -21,6 +21,7 @@ pub enum EnvelopeKind {
     Message(Message),
     Notification(Notification),
     Command(Command),
-    Session(Session)
+    SessionRequest(SessionRequest),
+    SessionResponse(SessionResponse)
 }
 
