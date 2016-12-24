@@ -8,8 +8,8 @@ extern crate tokio_proto;
 extern crate maud;
 
 extern crate serde;
-extern crate serde_json as json;
-extern crate serde_urlencoded as urlencoded;
+extern crate serde_json;
+extern crate serde_urlencoded;
 #[macro_use]
 extern crate serde_derive;
 
