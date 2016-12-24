@@ -15,8 +15,8 @@
 
 use serde_json::{ Map, Value };
 
-//pub type Node = &'static str;
-//pub type MsgID = &'static str;
+pub type Node = String;
+pub type MsgID = String;
 pub type TimeStamp = u64;
 
 /// Trait for all envelope related types.
@@ -107,28 +107,6 @@ macro_rules! impl_Envelope(
 
     );
 );
-
-/// Outlines the kinds of envelopes one can receive.
-/// TODO: Figure out if values as '&str' efficient / possible / worth.
-//#[derive(Debug, Serialize, Deserialize)]
-pub enum EnvelopeKind {
-    Message {
-        mime_type: String,
-        content: String,
-    },
-    Notification {
-        //event: NotificationEvent,
-    },
-    Command {
-        mime_type: String,
-        //method: CommandMethod,
-        uri: String,
-
-    },
-    Session {
-
-    }
-}
 
 //fn error_reply(&self,
 //               ty: ::stanzas::ErrorType,

@@ -1,6 +1,16 @@
 use serde_json::{ Map, Value };
 
-struct Notification { map: Map<String, Value> }
+pub struct Notification {
+    map: Map<String, Value>,
+
+    to: Option<Node>,
+    from: Option<Node>,
+    pp: Option<Node>,
+    id: MsgID,
+    metadata: Option<Value>,
+
+    event: NotificationEvent,
+}
 
 /// Signifies the event which pertains to a previously dealt with message.
 /// Uses 'id' from sent message to determine which one should happen.

@@ -1,6 +1,20 @@
 use serde_json::{ Map, Value };
 
-struct Command { map: Map<String, Value> }
+pub struct Command {
+    map: Map<String, Value>,
+
+    to: Option<Node>,
+    from: Option<Node>,
+    pp: Option<Node>,
+    id: MsgID,
+    metadata: Option<Value>,
+
+    method: CommandMethod,
+    uri: Option<String>,
+    #[serde(rename="type")]
+    mime_type: Option<String>,
+
+}
 
 /// Signifies the event which pertains to a previously dealt with message.
 /// Uses 'id' from sent message to determine which one should happen.
