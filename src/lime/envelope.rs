@@ -13,24 +13,28 @@
 //use json::ser::{to_vec};
 //use json::de::{from_slice};
 
-use serde_json::Map;
+use serde_json::{ Map, Value };
 
-pub type Node = String;
-pub type MsgID = String;
+//pub type Node = &'static str;
+//pub type MsgID = &'static str;
 pub type TimeStamp = u64;
 
 /// Trait for all envelope related types.
 /// TODO: Include 'pp' and 'metadata'
 pub trait Envelope {
-    fn id(&self) -> Option<MsgID>;
-    fn to(&self) -> Option<Node>;
-    fn from(&self) -> Option<Node>;
+    type Ty;
+
+    fn into_inner(self) -> Map<String, Value>;
+
+    fn id(&self) -> Option<&str>;
+    fn to(&self) -> Option<&str>;
+    fn from(&self) -> Option<&str>;
     //fn pp(&self) -> Option<Node>;
     //fn metadata(&self) -> Option<Node>;
 
-    fn set_id(&self) -> Option<MsgID>;
-    fn set_to(&self) -> Option<Node>;
-    fn set_from(&self) -> Option<Node>;
+    fn set_id(&mut self, Option<String>);
+    fn set_to(&mut self, Option<String>);
+    fn set_from(&mut self, Option<String>);
     //fn set_pp(&self) -> Option<Node>;
     //fn set_metadata(&self) -> Option<Node>;
 }
@@ -40,50 +44,62 @@ macro_rules! impl_Envelope(
         impl Envelope for $kind {
             type Ty = $ty;
 
-            fn into_inner(self) -> Map {
+            fn into_inner(self) -> Map<String, Value> {
                 self.map
             }
 
             fn id(&self) -> Option<&str> {
-                self.map.get("id").as_str()
-            }
-
-            fn to(&self) -> Option<&str> {
-                self.map.get("to").as_str()
-            }
-
-            fn from(&self) -> Option<&str> {
-                self.map.get("from").as_str()
-            }
-
-            fn envelope_type(&self) -> Option<$ty> {
-                match self.map.get("type") {
-                    Some(ty) => ($ty_some)(ty),
-                    None => $ty_none
+                if let Some(id) = self.map.get("id") {
+                    id.as_str()
+                } else {
+                    None
                 }
             }
 
+            fn to(&self) -> Option<&str> {
+                if let Some(to) = self.map.get("to") {
+                    to.as_str()
+                } else {
+                    None
+                }
+            }
+
+            fn from(&self) -> Option<&str> {
+                if let Some(from) = self.map.get("from") {
+                    from.as_str()
+                } else {
+                    None
+                }
+            }
+
+            //fn envelope_type(&self) -> Option<$ty> {
+                //match self.map.get("type") {
+                    //Some(ty) => ($ty_some)(ty),
+                    //None => $ty_none
+                //}
+            //}
+
             fn set_id(&mut self, id: Option<String>) {
                 if let Some(id) = id {
-                    self.set("id".into(), None, id);
+                    self.map.insert("id".into(), Value::String(id));
                 } else {
-                    self.remove("id");
+                    self.map.remove("id");
                 }
             }
 
             fn set_to(&mut self, to: Option<String>) {
                 if let Some(to) = to {
-                    self.set("to".into(), None, to);
+                    self.map.insert("to".into(), Value::String(to));
                 } else {
-                    self.remove("to", None);
+                    self.map.remove("to");
                 }
             }
 
             fn set_from(&mut self, from: Option<String>) {
                 if let Some(from) = from {
-                    self.set("from".into(), None, from);
+                    self.map.insert("from".into(), Value::String(from));
                 } else {
-                    self.remove("from");
+                    self.map.remove("from");
                 }
             }
 
@@ -94,18 +110,18 @@ macro_rules! impl_Envelope(
 
 /// Outlines the kinds of envelopes one can receive.
 /// TODO: Figure out if values as '&str' efficient / possible / worth.
-#[derive(Debug, Serialize, Deserialize)]
+//#[derive(Debug, Serialize, Deserialize)]
 pub enum EnvelopeKind {
     Message {
         mime_type: String,
         content: String,
     },
     Notification {
-        event: NotificationEvent,
+        //event: NotificationEvent,
     },
     Command {
         mime_type: String,
-        method: CommandMethod,
+        //method: CommandMethod,
         uri: String,
 
     },
