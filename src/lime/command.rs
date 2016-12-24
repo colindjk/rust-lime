@@ -1,5 +1,7 @@
 use serde_json::{ Map, Value };
 
+use lime::envelope::*;
+
 pub struct Command {
     map: Map<String, Value>,
 

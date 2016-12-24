@@ -1,5 +1,9 @@
 use serde_json::{ Map, Value };
 
+use lime::envelope::*;
+
+// TODO: How to parse the session? seems real complicated currently. 
+
 pub struct Session {
     map: Map<String, Value>,
 
