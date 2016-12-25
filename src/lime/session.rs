@@ -1,4 +1,4 @@
-use serde_json::{ Value };
+use serde_json::{ Map, Value };
 
 use lime::envelope::*;
 use lime::JsonMap;
@@ -12,7 +12,8 @@ pub struct SessionRequest {
     from: Option<Node>, // mandatory for clients during auth
     pp: Option<Node>,
     id: MsgID,
-    metadata: Option<JsonMap>,
+    #[serde(skip_serializing_if = "Map::is_empty")]
+    metadata: JsonMap,
 
     state: SessionState,
 

@@ -1,17 +1,16 @@
-use serde_json::{ Value };
+use serde_json::{ Map, Value };
 
 use lime::envelope::*;
 use lime::JsonMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
-    map: JsonMap,
-
     to: Option<Node>,
     from: Option<Node>,
     pp: Option<Node>,
     id: Option<MsgID>,
-    metadata: Option<JsonMap>,
+    #[serde(skip_serializing_if = "Map::is_empty")]
+    metadata: JsonMap,
 
     #[serde(rename="type")]
     mime_type: String,
@@ -21,7 +20,8 @@ pub struct Message {
 impl_Envelope!(Message,
                MessageType,
                |_| Some(MessageType::Normal),
-               Some(MessageType::Normal));
+               Some(MessageType::Normal),
+               "content");
 
 /// TODO: Figure out other possible message types.
 pub enum MessageType {

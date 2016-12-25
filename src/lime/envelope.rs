@@ -13,8 +13,6 @@
 //use json::ser::{to_vec};
 //use json::de::{from_slice};
 
-use lime::JsonMap;
-
 pub type Node = String;
 pub type MsgID = String;
 pub type TimeStamp = u64;
@@ -25,7 +23,7 @@ pub type TimeStamp = u64;
 pub trait Envelope {
     type Ty;
 
-    fn into_inner(self) -> JsonMap;
+    fn unique_field<'a>() -> &'a str;
 
     fn id(&self) -> Option<&str>;
     fn to(&self) -> Option<&str>;
@@ -41,68 +39,18 @@ pub trait Envelope {
 }
 
 macro_rules! impl_Envelope(
-    ($kind: ident, $ty: ty, $ty_some: expr, $ty_none: expr) => (
+    ($kind: ident, $ty: ty, $ty_some: expr, $ty_none: expr, $unique_field: expr) => (
         impl Envelope for $kind {
             type Ty = $ty;
 
-            fn into_inner(self) -> JsonMap {
-                self.map
-            }
+            fn unique_field<'a>() -> &'a str { $unique_field }
 
-            fn id(&self) -> Option<&str> {
-                if let Some(id) = self.map.get("id") {
-                    id.as_str()
-                } else {
-                    None
-                }
-            }
-
-            fn to(&self) -> Option<&str> {
-                if let Some(to) = self.map.get("to") {
-                    to.as_str()
-                } else {
-                    None
-                }
-            }
-
-            fn from(&self) -> Option<&str> {
-                if let Some(from) = self.map.get("from") {
-                    from.as_str()
-                } else {
-                    None
-                }
-            }
-
-            //fn envelope_type(&self) -> Option<$ty> {
-                //match self.map.get("type") {
-                    //Some(ty) => ($ty_some)(ty),
-                    //None => $ty_none
-                //}
-            //}
-
-            fn set_id(&mut self, id: Option<String>) {
-                if let Some(id) = id {
-                    self.map.insert("id".into(), Value::String(id));
-                } else {
-                    self.map.remove("id");
-                }
-            }
-
-            fn set_to(&mut self, to: Option<String>) {
-                if let Some(to) = to {
-                    self.map.insert("to".into(), Value::String(to));
-                } else {
-                    self.map.remove("to");
-                }
-            }
-
-            fn set_from(&mut self, from: Option<String>) {
-                if let Some(from) = from {
-                    self.map.insert("from".into(), Value::String(from));
-                } else {
-                    self.map.remove("from");
-                }
-            }
+            fn id(&self) -> Option<&str> { self.id.as_ref().map(|s| &**s) }
+            fn to(&self) -> Option<&str> { self.to.as_ref().map(|s| &**s) }
+            fn from(&self) -> Option<&str> { self.from.as_ref().map(|s| &**s) }
+            fn set_id(&mut self, id: Option<String>) { self.id = id; }
+            fn set_to(&mut self, to: Option<String>) { self.to = to; }
+            fn set_from(&mut self, from: Option<String>) { self.from = from; }
 
         }
 

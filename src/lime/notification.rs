@@ -1,3 +1,5 @@
+use serde_json::Map;
+
 use lime::envelope::*;
 use lime::JsonMap;
 
@@ -7,7 +9,7 @@ pub struct Notification {
     from: Option<Node>,
     pp: Option<Node>,
     id: MsgID,
-    metadata: Option<JsonMap>,
+    metadata: JsonMap,
 
     event: NotificationEvent,
 }
@@ -60,7 +62,8 @@ impl Deserialize for Notification {
             from: Option<Node>,
             pp: Option<Node>,
             id: MsgID,
-            metadata: Option<JsonMap>,
+            #[serde(skip_serializing_if="Map::is_empty")]
+            metadata: JsonMap,
 
             event: NotificationEventHelper,
             reason: Option<Reason>,
@@ -109,7 +112,7 @@ impl Serialize for Notification {
             from: Option<&'a str>,
             pp: Option<&'a str>,
             id: &'a str,
-            metadata: Option<&'a JsonMap>,
+            metadata: &'a JsonMap,
 
             event: NotificationEventHelper,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -133,7 +136,7 @@ impl Serialize for Notification {
             from: self.from.as_ref().map(|s| &**s),
             pp: self.pp.as_ref().map(|s| &**s),
             id: &self.id,
-            metadata: self.metadata.as_ref(),
+            metadata: &self.metadata,
 
             event: event,
             reason: reason,

@@ -1,3 +1,5 @@
+use serde_json::Map;
+
 use lime::envelope::*;
 use lime::JsonMap;
 
@@ -7,7 +9,8 @@ pub struct Command {
     from: Option<Node>,
     pp: Option<Node>,
     id: MsgID,
-    metadata: Option<JsonMap>,
+    #[serde(skip_serializing_if = "Map::is_empty")]
+    metadata: JsonMap,
 
     method: CommandMethod,
     uri: Option<String>,
