@@ -126,7 +126,6 @@ impl Serialize for Notification {
             NotificationEvent::Dispatched   => (Dispatched, None),
             NotificationEvent::Consumed     => (Consumed, None),
             NotificationEvent::Failed(ref reason) => (Failed, Some(reason)),
-            _ => panic!()
         };
 
         NotificationHelper {
