@@ -1,6 +1,8 @@
+use serde_json::{ Map, Value };
 
 /// -- Global Constants --
 pub static DELIMITER : u8 = b'\n' as u8;
+type JsonMap = Map<String, Value>;
 
 #[macro_use]
 pub mod envelope;

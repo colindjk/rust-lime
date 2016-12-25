@@ -1,13 +1,13 @@
-use serde_json::{ Map, Value };
-
 use lime::envelope::*;
+use lime::JsonMap;
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Command {
     to: Option<Node>,
     from: Option<Node>,
     pp: Option<Node>,
     id: MsgID,
-    metadata: Option<Value>,
+    metadata: Option<JsonMap>,
 
     method: CommandMethod,
     uri: Option<String>,

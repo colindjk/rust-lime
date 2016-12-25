@@ -13,7 +13,7 @@
 //use json::ser::{to_vec};
 //use json::de::{from_slice};
 
-use serde_json::{ Map, Value };
+use lime::JsonMap;
 
 pub type Node = String;
 pub type MsgID = String;
@@ -25,7 +25,7 @@ pub type TimeStamp = u64;
 pub trait Envelope {
     type Ty;
 
-    fn into_inner(self) -> Map<String, Value>;
+    fn into_inner(self) -> JsonMap;
 
     fn id(&self) -> Option<&str>;
     fn to(&self) -> Option<&str>;
@@ -45,7 +45,7 @@ macro_rules! impl_Envelope(
         impl Envelope for $kind {
             type Ty = $ty;
 
-            fn into_inner(self) -> Map<String, Value> {
+            fn into_inner(self) -> JsonMap {
                 self.map
             }
 
