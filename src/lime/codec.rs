@@ -4,9 +4,9 @@ use tokio::io::{
 };
 
 use std::io;
+use std::str;
 use lime::{ SealedEnvelope, DELIMITER };
 use serde_json::value::*;
-use serde_json;
 
 pub struct LimeCodec;
 
@@ -16,15 +16,42 @@ impl Codec for LimeCodec {
 
     fn decode(&mut self, buf: &mut EasyBuf)
               -> Result<Option<Self::In>, io::Error> {
-        match buf.as_slice().iter().position(|&b| b == DELIMITER) {
+        let index = match buf.as_slice().iter().position(|&b| b == DELIMITER) {
             Some(index) => {
                 println!("Decoding {}", index);
-                let object_buf = buf.drain_to(index + 1);
-                // TODO: Clean the below up so it doesn't blow up
-                Ok(Some(serde_json::from_slice(object_buf.as_slice()).unwrap()))
+                index
             }
-            None => Ok(None)
+            None => return Ok(None)
+        };
+        let buf = buf.drain_to(index + 1);
+        let buf = str::from_utf8(buf.as_slice()).unwrap();
+    
+        use serde_json::from_str;
+        use lime::SealedEnvelope::*;
+
+        let env = if buf.contains("content") {
+            Message(from_str(buf).unwrap())
         }
+        else if buf.contains("event") {
+            Notification(from_str(buf).unwrap())
+        }
+        else if buf.contains("method") {
+            Command(from_str(buf).unwrap())
+        }
+        else if buf.contains("state") {
+            if buf.contains("encryption")  ||
+               buf.contains("compression") || 
+               buf.contains("compression") 
+            {
+                SessionRes(from_str(buf).unwrap())
+            } else {
+                SessionReq(from_str(buf).unwrap())
+            }
+        }
+        else {
+            Other(from_str(buf).unwrap())
+        };
+        Ok(Some(env))
     }
 
     // TODO: Make a Envelope based method which produces a Vec<u8>, or
