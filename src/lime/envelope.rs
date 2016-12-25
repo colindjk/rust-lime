@@ -21,9 +21,9 @@ pub type TimeStamp = u64;
 /// TODO: Include 'pp' and 'metadata'
 /// TODO: Convert to MIME
 pub trait Envelope {
-    type Ty;
+    //type Ty;
 
-    fn unique_field<'a>() -> &'a str;
+    //fn unique<'a>() -> &'a str;
 
     fn id(&self) -> Option<&str>;
     fn to(&self) -> Option<&str>;
@@ -41,9 +41,9 @@ pub trait Envelope {
 macro_rules! impl_Envelope(
     ($kind: ident, $ty: ty, $ty_some: expr, $ty_none: expr, $unique_field: expr) => (
         impl Envelope for $kind {
-            type Ty = $ty;
+            //type Ty = $ty;
 
-            fn unique_field<'a>() -> &'a str { $unique_field }
+            //fn unique<'a>() -> &'a str { $unique_field }
 
             fn id(&self) -> Option<&str> { self.id.as_ref().map(|s| &**s) }
             fn to(&self) -> Option<&str> { self.to.as_ref().map(|s| &**s) }
