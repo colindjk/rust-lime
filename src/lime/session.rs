@@ -8,41 +8,40 @@ use lime::JsonMap;
 /// Sent by server, contains options for authentication
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SessionRequest {
-    to: Option<Node>,
-    from: Option<Node>, // mandatory for clients during auth
-    pp: Option<Node>,
-    id: MsgID,
-    #[serde(skip_serializing_if = "Map::is_empty")]
-    metadata: JsonMap,
+    pub to: Option<Node>,
+    pub from: Option<Node>, // mandatory for clients during auth
+    pub pp: Option<Node>,
+    pub id: MsgID,
+    pub metadata: Option<JsonMap>,
 
-    state: SessionState,
+    pub state: SessionState,
 
     #[serde(rename="encryptionOptions")]
-    encryption_options: Option<Vec<String>>,
+    pub encryption_options: Option<Vec<String>>,
     #[serde(rename="compressionOptions")]
-    compression_options: Option<Vec<String>>,
+    pub compression_options: Option<Vec<String>>,
     #[serde(rename="schemeOptions")]
-    scheme_options: Option<Vec<Value>>,
+    pub scheme_options: Option<Vec<Value>>,
 }
 
 /// Sent by server, contains options for authentication
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SessionResponse {
-    to: Option<Node>,
-    from: Option<Node>, // mandatory for clients during auth
-    pp: Option<Node>,
-    id: MsgID,
-    metadata: Option<JsonMap>,
+    pub to: Option<Node>,
+    pub from: Option<Node>, // mandatory for clients during auth
+    pub pp: Option<Node>,
+    pub id: MsgID,
+    pub metadata: Option<JsonMap>,
 
-    state: SessionState,
+    pub state: SessionState,
 
-    encryption: Option<String>,
-    compression: Option<String>,
-    scheme: Option<Value>,
+    pub encryption: Option<String>,
+    pub compression: Option<String>,
+    pub scheme: Option<Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-enum SessionState {
+pub enum SessionState {
     #[serde(rename="new")]              New,
     #[serde(rename="negotiating")]      Negotiating,
     #[serde(rename="authenticating")]   Authenticating,

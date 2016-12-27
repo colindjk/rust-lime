@@ -5,17 +5,16 @@ use lime::JsonMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Command {
-    to: Option<Node>,
-    from: Option<Node>,
-    pp: Option<Node>,
-    id: MsgID,
-    #[serde(skip_serializing_if = "Map::is_empty")]
-    metadata: JsonMap,
+    pub to: Option<Node>,
+    pub from: Option<Node>,
+    pub pp: Option<Node>,
+    pub id: MsgID,
+    pub metadata: Option<JsonMap>,
 
-    method: CommandMethod,
-    uri: Option<String>,
+    pub method: CommandMethod,
+    pub uri: Option<String>,
     #[serde(rename="type")]
-    mime_type: Option<String>,
+    pub mime_type: Option<String>,
 
 }
 

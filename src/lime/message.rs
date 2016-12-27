@@ -7,16 +7,19 @@ pub type Content = Value;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
-    to: Option<Node>,
-    from: Option<Node>,
-    pp: Option<Node>,
-    id: Option<MsgID>,
-    #[serde(skip_serializing_if = "Map::is_empty")]
-    metadata: JsonMap,
+    pub to: Option<Node>,
+    pub from: Option<Node>,
+    pub pp: Option<Node>,
+    pub id: Option<MsgID>,
+    pub metadata: Option<JsonMap>,
 
     #[serde(rename="type")]
-    mime_type: String,
-    content: Content,
+    pub mime_type: String,
+    pub content: Content,
+}
+
+impl Message {
+
 }
 
 impl_Envelope!(Message,
