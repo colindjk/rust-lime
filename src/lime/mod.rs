@@ -12,6 +12,8 @@ pub mod command;
 pub mod session;
 pub mod codec;
 
+mod helper;
+
 pub use self::codec::LimeCodec;
 pub use self::envelope::*;
 pub use self::message::{Message, Content};
@@ -36,68 +38,12 @@ pub enum SealedEnvelope {
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 use serde::de::{Visitor, MapVisitor, Error as DeError};
 
-/// Contains all known fields an Envelope can contain.
-enum FieldHelper {
-    To, From, Pp, Id, Metadata, // Common fields
-    // Unique fields
-    Content, // Message
-    Event,   // Notification
-    Method,  // Command
-    State,   // Session[Request|Response]
-    // Extra session-specific fields
-    Encryption,
-    Compression,
-    Scheme,
-    EncryptionOptions,
-    CompressionOptions,
-    SchemeOptions,
-    // Extra (sometimes unique) fields 
-    Type,
-    Uri,
-    // Handle unknown fields
-    Other(String)
-}
-
-impl Deserialize for FieldHelper {
-    fn deserialize<D>(deserializer: &mut D) -> Result<FieldHelper, D::Error>
-        where D: Deserializer,
-    {
-        struct FieldVisitor;
-
-        impl Visitor for FieldVisitor {
-            type Value = FieldHelper;
-
-
-            fn visit_str<E>(&mut self, value: &str) -> Result<FieldHelper, E>
-                where E: DeError,
-            {
-                use self::FieldHelper::*;
-                Ok(match value {
-                    "to" => To,
-                    "from" => From,
-                    "pp" => Pp,
-                    "id" => Id,
-                    "metadata" => Metadata,
-                    "content" => Content,   // Message
-                    "event" => Event,       // Notification
-                    "method" => Method,     // Command
-                    "state" => State,       // Session
-                    "encryption" => Encryption,
-                    "compression" => Compression,
-                    "scheme" => Scheme,
-                    "encryptionOptions" => EncryptionOptions,
-                    "compressionOptions" => CompressionOptions,
-                    "schemeOptions" => SchemeOptions,
-                    "type" => Type,
-                    "uri" => Uri,
-
-                    _ => Other(value.to_owned()),
-                })
-            }
-        }
-
-        deserializer.deserialize_str(FieldVisitor)
-    }
+/// When an Error occurs, this will exist.
+/// TODO: Use this for other structs aside from just Notification.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ErrReason {
+    code: u8,
+    description: Option<String>
 }
 
 /// Deserialization implementation distinguishes the specific type of 'frame'
@@ -132,6 +78,7 @@ impl Deserialize for SealedEnvelope {
                 let mut s_options   = None;
                 let mut mime_type   = None;
                 let mut uri         = None;
+                let mut reason      = None;
                 let mut other       = Map::new();
 
                 use self::FieldHelper::*;
@@ -157,6 +104,7 @@ impl Deserialize for SealedEnvelope {
 
                         Type => mime_type = Some(visitor.visit_value()?),
                         Uri => uri = Some(visitor.visit_value()?),
+                        Reason => reason = Some(visitor.visit_value()?),
                         Other(key) => {
                             other.insert(key, visitor.visit_value()?);
                         }
@@ -165,8 +113,8 @@ impl Deserialize for SealedEnvelope {
                 visitor.end()?;
 
                 // TODO: Match all fields which are at some point required.
-                Ok(match (content, event, method, state) {
-                    (Some(content), None, None, None) => {
+                Ok(match (content, event, method, state, id, mime_type) {
+                    (Some(content), None, None, None, id, Some(mime_type)) => {
                         SealedEnvelope::Message(Message {
                             to: to,
                             from: from,
@@ -177,7 +125,23 @@ impl Deserialize for SealedEnvelope {
                             content: content,
                         })
                     }
-                    (None, Some(event), None, None) => {
+                    (None, Some(event), None, None, Some(id), None) => {
+                        use self::notification::NotificationEvent::*;
+                        let event = match (event, reason) {
+                            (EventHelper::Accepted, None) => Accepted,
+                            (EventHelper::Validated, None) => Validated,
+                            (EventHelper::Authorized, None) => Authorized,
+                            (EventHelper::Dispatched, None) => Dispatched,
+                            (EventHelper::Received, None) => Received,
+                            (EventHelper::Consumed, None) => Consumed,
+                            (EventHelper::Failed, Some(reason)) => Failed(reason),
+                            (EventHelper::Failed, None) => {
+                                unimplemented!()
+                            },
+                            (_, Some(_)) => {
+                                unimplemented!()
+                            }
+                        };
                         SealedEnvelope::Notification(Notification {
                             to: to,
                             from: from,
@@ -187,7 +151,7 @@ impl Deserialize for SealedEnvelope {
                             event: event,
                         })
                     }
-                    (None, None, Some(method), None) => {
+                    (None, None, Some(method), None, Some(id), mime_type) => {
                         SealedEnvelope::Command(Command {
                             to: to,
                             from: from,
@@ -199,8 +163,7 @@ impl Deserialize for SealedEnvelope {
                             uri: uri,
                         })
                     }
-                    (None, None, None, Some(state)) => {
-                        //unimplemented!()
+                    (None, None, None, Some(state), Some(id), None) => {
                         match (encryption, compression, scheme) {
                             (None, None, None) => {
                                 SealedEnvelope::SessionReq(SessionRequest {
@@ -215,7 +178,7 @@ impl Deserialize for SealedEnvelope {
                                     scheme_options: s_options,
                                 })
                             }
-                            _ => {
+                            (encryption, compression, scheme) => {
                                 SealedEnvelope::SessionRes(SessionResponse {
                                     to: to,
                                     from: from,
@@ -230,7 +193,7 @@ impl Deserialize for SealedEnvelope {
                             }
                         }
                     }
-                    (content, event, method, state) => {
+                    (content, event, method, state, id, mime_type) => {
                         unimplemented!()
                         //use serde_json::to_value;
                         //id.map(|id| other.insert("id".into(), to_value(id)));

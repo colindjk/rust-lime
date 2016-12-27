@@ -57,31 +57,3 @@ macro_rules! impl_Envelope(
     );
 );
 
-//fn error_reply(&self,
-//               ty: ::stanzas::ErrorType,
-//               cond: ::stanzas::DefinedCondition,
-//               text: Option<String>) -> $kind
-//{
-//    let to = self.from().map(|x| x.into());
-//    let id = self.id().unwrap_or("").into();
-//    let ty = ty.attr_string().into();
-//
-//    let mut reply = $kind {
-//        elem: Value::new($name.into(), Some(ns::JABBER_CLIENT.into()),
-//                                vec![("type".into(), None, "error".into()),
-//                                     ("id".into(), None, id)])
-//    };
-//    {
-//        let error = reply.tag(xml::Element::new("error".into(),
-//                                                Some(ns::JABBER_CLIENT.into()),
-//                                                vec![("type".into(), None, ty)]))
-//                         .tag_stay(cond.element());
-//        if let Some(text) = text {
-//            error.tag(xml::Element::new("text".into(),
-//                                        Some(ns::STANZA_ERRORS.into()), vec![]))
-//                 .text(text);
-//        }
-//    }
-//    reply.set_to(to);
-//    reply
-//}

@@ -12,6 +12,8 @@ pub struct Command {
     pub metadata: Option<JsonMap>,
 
     pub method: CommandMethod,
+    pub status: CommandStatus,
+
     pub uri: Option<String>,
     #[serde(rename="type")]
     pub mime_type: Option<String>,
@@ -29,5 +31,10 @@ pub enum CommandMethod {
     #[serde(rename="subscribe")]    Subscribe,
     #[serde(rename="unsubscribe")]  Unsubscribe,
     #[serde(rename="observe")]      Observe,
+}
+
+pub enum CommandStatus {
+    #[serde(rename="success")]  Success,
+    #[serde(rename="failure")]  Failure(ErrReason),
 }
 
