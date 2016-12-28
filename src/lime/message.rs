@@ -5,7 +5,7 @@ use lime::JsonMap;
 
 pub type Content = Value;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Message {
     pub to: Option<Node>,
     pub from: Option<Node>,

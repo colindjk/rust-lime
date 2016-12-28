@@ -196,3 +196,19 @@ impl Deserialize for SealedEnvelope {
     }
 }
 
+impl Serialize for SealedEnvelope {
+    fn serialize<S>(&self, serializer: &mut S)
+            -> Result<(), S::Error> where S: Serializer
+    {
+        use self::SealedEnvelope::*;
+        match *self {
+            Message(ref val)      => val.serialize(serializer),
+            Notification(ref val) => val.serialize(serializer),
+            //Command(ref val)        => val.serialize(serializer),
+            //SessionReq(ref val)     => val.serialize(serializer),
+            //SessionRes(ref val)     => val.serialize(serializer),
+            //Unknown(ref val)        => val.serialize(serializer),
+            _ => panic!()
+        }
+    }
+}

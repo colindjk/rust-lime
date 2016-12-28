@@ -46,7 +46,6 @@ impl Serialize for Notification {
             metadata: Option<&'a JsonMap>,
 
             event: NotificationEventHelper,
-            #[serde(skip_serializing_if = "Option::is_none")]
             reason: Option<&'a ErrReason>,
         }
 
