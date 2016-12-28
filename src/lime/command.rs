@@ -19,7 +19,7 @@ pub struct Command {
 /// Signifies the event which pertains to a previously dealt with message.
 /// Uses 'id' from sent message to determine which one should happen.
 /// TODO: Unique set of 'id's per user or nah?
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum CommandMethod {
     #[serde(rename="get")]          Get,
     #[serde(rename="set")]          Set,
@@ -29,7 +29,7 @@ pub enum CommandMethod {
     #[serde(rename="observe")]      Observe,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CommandStatus {
     Success,
     Failure(ErrReason),

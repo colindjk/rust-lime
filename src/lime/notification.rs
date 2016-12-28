@@ -16,7 +16,7 @@ pub struct Notification {
 /// Signifies the event which pertains to a previously dealt with message.
 /// Uses 'id' from sent message to determine which one should happen.
 /// TODO: Unique set of 'id's per user or nah?
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum NotificationEvent {
     Accepted,
     Validated,

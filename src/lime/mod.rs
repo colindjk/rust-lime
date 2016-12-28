@@ -18,7 +18,7 @@ use self::helper::*;
 pub use self::codec::LimeCodec;
 pub use self::envelope::*;
 pub use self::message::{Message, Content};
-pub use self::notification::Notification;
+pub use self::notification::{Notification, NotificationEvent};
 pub use self::command::Command;
 pub use self::session::*;
 
@@ -41,10 +41,10 @@ use serde::de::{Visitor, MapVisitor};
 
 /// When an Error occurs, this will exist.
 /// TODO: Use this for other structs aside from just Notification.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ErrReason {
-    code: u8,
-    description: Option<String>
+    pub code: u8,
+    pub description: Option<String>
 }
 
 /// Deserialization implementation distinguishes the specific type of 'frame'

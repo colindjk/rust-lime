@@ -37,7 +37,7 @@ pub struct SessionResponse {
     pub scheme: Option<Value>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum SessionState {
     New,
     Negotiating,
