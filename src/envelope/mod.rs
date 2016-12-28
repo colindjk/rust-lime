@@ -4,13 +4,12 @@ use serde_json::{ Map, Value };
 pub static DELIMITER : u8 = b'\n' as u8;
 type JsonMap = Map<String, Value>;
 
-mod ser;
-
 pub mod message;
 pub mod notification;
 pub mod command;
 pub mod session;
 
+mod ser;
 mod codec;
 mod helper;
 
