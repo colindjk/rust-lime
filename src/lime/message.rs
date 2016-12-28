@@ -1,11 +1,11 @@
-use serde_json::{ Map, Value };
+use serde_json::{ Value };
 
 use lime::envelope::*;
 use lime::JsonMap;
 
 pub type Content = Value;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Message {
     pub to: Option<Node>,
     pub from: Option<Node>,
@@ -13,7 +13,6 @@ pub struct Message {
     pub id: Option<MsgID>,
     pub metadata: Option<JsonMap>,
 
-    #[serde(rename="type")]
     pub mime_type: String,
     pub content: Content,
 }

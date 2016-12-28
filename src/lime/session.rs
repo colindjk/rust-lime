@@ -1,12 +1,12 @@
-use serde_json::{ Map, Value };
+use serde_json::{ Value };
 
 use lime::envelope::*;
-use lime::JsonMap;
+use lime::{JsonMap, ErrReason};
 
 // TODO: How to parse the session? seems real complicated currently. 
 
 /// Sent by server, contains options for authentication
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct SessionRequest {
     pub to: Option<Node>,
     pub from: Option<Node>, // mandatory for clients during auth
@@ -16,16 +16,13 @@ pub struct SessionRequest {
 
     pub state: SessionState,
 
-    #[serde(rename="encryptionOptions")]
     pub encryption_options: Option<Vec<String>>,
-    #[serde(rename="compressionOptions")]
     pub compression_options: Option<Vec<String>>,
-    #[serde(rename="schemeOptions")]
     pub scheme_options: Option<Vec<Value>>,
 }
 
 /// Sent by server, contains options for authentication
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct SessionResponse {
     pub to: Option<Node>,
     pub from: Option<Node>, // mandatory for clients during auth
@@ -40,14 +37,14 @@ pub struct SessionResponse {
     pub scheme: Option<Value>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub enum SessionState {
-    #[serde(rename="new")]              New,
-    #[serde(rename="negotiating")]      Negotiating,
-    #[serde(rename="authenticating")]   Authenticating,
-    #[serde(rename="established")]      Established,
-    #[serde(rename="finishing")]        Finishing,
-    #[serde(rename="finished")]         Finished,
-    #[serde(rename="failed")]           Failed,
+    New,
+    Negotiating,
+    Authenticating,
+    Established,
+    Finishing,
+    Finished,
+    Failed(ErrReason),
 }
 

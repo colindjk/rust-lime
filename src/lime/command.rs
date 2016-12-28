@@ -1,23 +1,19 @@
-use serde_json::Map;
-
 use lime::envelope::*;
-use lime::JsonMap;
+use lime::{ErrReason, JsonMap};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Command {
     pub to: Option<Node>,
     pub from: Option<Node>,
     pub pp: Option<Node>,
-    pub id: MsgID,
+    pub id: Option<MsgID>,
     pub metadata: Option<JsonMap>,
 
     pub method: CommandMethod,
-    pub status: CommandStatus,
+    pub status: Option<CommandStatus>,
 
     pub uri: Option<String>,
-    #[serde(rename="type")]
     pub mime_type: Option<String>,
-
 }
 
 /// Signifies the event which pertains to a previously dealt with message.
@@ -33,8 +29,9 @@ pub enum CommandMethod {
     #[serde(rename="observe")]      Observe,
 }
 
+#[derive(Debug)]
 pub enum CommandStatus {
-    #[serde(rename="success")]  Success,
-    #[serde(rename="failure")]  Failure(ErrReason),
+    Success,
+    Failure(ErrReason),
 }
 
