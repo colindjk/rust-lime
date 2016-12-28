@@ -26,7 +26,7 @@ impl Deserialize for SealedEnvelope {
         impl Visitor for EnvelopeVisitor {
             type Value = SealedEnvelope;
 
-            fn visit_map<V>(&mut self, mut visitor: V)
+            fn visit_map<V>(&mut self, mut vis: V)
                             -> Result<SealedEnvelope, V::Error>
                 where V: MapVisitor,
             {
@@ -55,36 +55,36 @@ impl Deserialize for SealedEnvelope {
                 let mut other       = Map::new();
 
                 use envelope::helper::FieldHelper::*;
-                while let Some(field) = visitor.visit_key()? {
+                while let Some(field) = vis.visit_key()? {
                     match field {
-                        To => to = Some(visitor.visit_value()?),
-                        From => from = Some(visitor.visit_value()?),
-                        Pp => pp = Some(visitor.visit_value()?),
-                        Id => id = Some(visitor.visit_value()?),
-                        Metadata => metadata = Some(visitor.visit_value()?),
+                        To => to = Some(vis.visit_value()?),
+                        From => from = Some(vis.visit_value()?),
+                        Pp => pp = Some(vis.visit_value()?),
+                        Id => id = Some(vis.visit_value()?),
+                        Metadata => metadata = Some(vis.visit_value()?),
 
-                        Content => content = Some(visitor.visit_value()?),
-                        Event => event = Some(visitor.visit_value()?),
-                        Method => method = Some(visitor.visit_value()?),
-                        State => state = Some(visitor.visit_value()?),
+                        Content => content = Some(vis.visit_value()?),
+                        Event => event = Some(vis.visit_value()?),
+                        Method => method = Some(vis.visit_value()?),
+                        State => state = Some(vis.visit_value()?),
 
-                        Encryption => encryption = Some(visitor.visit_value()?),
-                        Compression => compression = Some(visitor.visit_value()?),
-                        Scheme => scheme = Some(visitor.visit_value()?),
-                        EncryptionOptions => e_options = Some(visitor.visit_value()?),
-                        CompressionOptions => c_options = Some(visitor.visit_value()?),
-                        SchemeOptions => s_options = Some(visitor.visit_value()?),
+                        Encryption => encryption = Some(vis.visit_value()?),
+                        Compression => compression = Some(vis.visit_value()?),
+                        Scheme => scheme = Some(vis.visit_value()?),
+                        EncryptionOptions => e_options = Some(vis.visit_value()?),
+                        CompressionOptions => c_options = Some(vis.visit_value()?),
+                        SchemeOptions => s_options = Some(vis.visit_value()?),
 
-                        Type => mime_type = Some(visitor.visit_value()?),
-                        Uri => uri = Some(visitor.visit_value()?),
-                        Reason => reason = Some(visitor.visit_value()?),
-                        Status => status = Some(visitor.visit_value()?),
+                        Type => mime_type = Some(vis.visit_value()?),
+                        Uri => uri = Some(vis.visit_value()?),
+                        Reason => reason = Some(vis.visit_value()?),
+                        Status => status = Some(vis.visit_value()?),
                         Other(key) => {
-                            other.insert(key, visitor.visit_value()?);
+                            other.insert(key, vis.visit_value()?);
                         }
                     }
                 }
-                visitor.end()?;
+                vis.end()?;
 
                 // TODO: Match all fields which are at some point required.
                 Ok(match (content, event, method, state, id, mime_type) {
