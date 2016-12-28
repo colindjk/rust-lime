@@ -1,7 +1,7 @@
 use serde_json::{ Value };
 
-use lime::envelope::*;
-use lime::JsonMap;
+use envelope::envelope::*;
+use envelope::JsonMap;
 
 mod ser;
 

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer};
 use serde::de::{Visitor, Error as DeError};
 
-use lime::{ErrReason};
+use envelope::{ErrReason};
 
 /// Private helper that reflects the structure of the JSON.
 /// Notification event
@@ -16,11 +16,11 @@ pub enum NotificationEventHelper {
     #[serde(rename="failed")]       Failed,
 }
 
-use lime::notification::NotificationEvent;
+use envelope::notification::NotificationEvent;
 
 pub fn into_event(helper: NotificationEventHelper,
                   reason: Option<ErrReason>) -> NotificationEvent {
-    use lime::notification::NotificationEvent::*;
+    use envelope::notification::NotificationEvent::*;
     match (helper, reason) {
         (NotificationEventHelper::Accepted, None) => Accepted,
         (NotificationEventHelper::Validated, None) => Validated,
@@ -44,11 +44,11 @@ pub enum CommandStatusHelper {
     #[serde(rename="failure")] Failure,
 }
 
-use lime::command::CommandStatus;
+use envelope::command::CommandStatus;
 
 pub fn into_status(helper: Option<CommandStatusHelper>,
                    reason: Option<ErrReason>) -> Option<CommandStatus> {
-    use lime::command::CommandStatus::*;
+    use envelope::command::CommandStatus::*;
     match (helper, reason) {
         (Some(CommandStatusHelper::Success), None) => Some(Success),
         (Some(CommandStatusHelper::Failure), Some(rsn)) => Some(Failure(rsn)),
@@ -75,11 +75,11 @@ pub enum SessionStateHelper {
     #[serde(rename="failed")]           Failed,
 }
 
-use lime::session::SessionState;
+use envelope::session::SessionState;
 
 pub fn into_state(helper: SessionStateHelper,
                   reason: Option<ErrReason>) -> SessionState {
-    use lime::session::SessionState::*;
+    use envelope::session::SessionState::*;
     match (helper, reason) {
         (SessionStateHelper::New, None) => New,
         (SessionStateHelper::Negotiating, None) => Negotiating,
