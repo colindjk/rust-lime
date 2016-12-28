@@ -15,6 +15,7 @@ extern crate serde_derive;
 
 pub mod server;
 pub mod client;
-pub mod lime;
+#[macro_use]
+pub mod envelope;
 pub mod utils;
 
