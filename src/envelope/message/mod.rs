@@ -1,7 +1,6 @@
 use serde_json::{ Value };
 
-use envelope::envelope::*;
-use envelope::JsonMap;
+use envelope::{JsonMap, Node, MsgID};
 
 mod ser;
 
@@ -23,11 +22,12 @@ impl Message {
 
 }
 
-impl_Envelope!(Message,
-               MessageType,
-               |_| Some(MessageType::Normal),
-               Some(MessageType::Normal),
-               "content");
+// TODO : Import this
+//impl_Envelope!(Message,
+               //MessageType,
+               //|_| Some(MessageType::Normal),
+               //Some(MessageType::Normal),
+               //"content");
 
 /// TODO: Figure out other possible message types.
 pub enum MessageType {

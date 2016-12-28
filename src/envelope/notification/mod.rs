@@ -1,6 +1,4 @@
-use envelope::envelope::*;
-use envelope::ErrReason;
-use envelope::JsonMap;
+use envelope::{ErrReason, JsonMap, Node, MsgID};
 
 mod ser;
 

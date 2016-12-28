@@ -1,5 +1,6 @@
 // Thanks to github user 'dtolnay' for help with the following code...
 use serde::ser::{Serialize, Serializer};
+use envelope::{JsonMap, ErrReason};
 use envelope::helper::NotificationEventHelper;
 use envelope::notification::*;
 

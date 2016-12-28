@@ -1,6 +1,7 @@
 use serde::ser::{Serialize, Serializer};
+use envelope::{JsonMap, ErrReason};
 use envelope::helper::CommandStatusHelper;
-use envelope::command::Command;
+use envelope::command::*;
 
 impl Serialize for Command {
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>

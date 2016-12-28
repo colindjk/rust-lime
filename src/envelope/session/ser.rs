@@ -1,6 +1,9 @@
 use serde::ser::{Serialize, Serializer};
+use envelope::{JsonMap, ErrReason};
 use envelope::helper::SessionStateHelper;
 use envelope::session::*;
+
+use serde_json::Value;
 
 impl Serialize for SessionRequest {
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>

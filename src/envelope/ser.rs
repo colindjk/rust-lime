@@ -1,4 +1,19 @@
-use envelope::SealedEnvelope;
+// SerDe section
+
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
+use serde::de::{Visitor, MapVisitor};
+use serde_json::Map;
+
+use envelope::{
+    SealedEnvelope,
+    Message,
+    Notification,
+    Command,
+    SessionRequest, 
+    SessionResponse, 
+};
+
+use envelope::helper::*;
 
 /// Deserialization implementation distinguishes the specific type of 'frame'
 /// being received.
@@ -39,7 +54,7 @@ impl Deserialize for SealedEnvelope {
                 let mut reason      = None;
                 let mut other       = Map::new();
 
-                use self::helper::FieldHelper::*;
+                use envelope::helper::FieldHelper::*;
                 while let Some(field) = visitor.visit_key()? {
                     match field {
                         To => to = Some(visitor.visit_value()?),
@@ -153,7 +168,7 @@ impl Serialize for SealedEnvelope {
     fn serialize<S>(&self, serializer: &mut S)
             -> Result<(), S::Error> where S: Serializer
     {
-        use self::SealedEnvelope::*;
+        use envelope::SealedEnvelope::*;
         match *self {
             Message(ref val)      => val.serialize(serializer),
             Notification(ref val) => val.serialize(serializer),

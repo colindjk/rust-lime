@@ -4,19 +4,17 @@ use serde_json::{ Map, Value };
 pub static DELIMITER : u8 = b'\n' as u8;
 type JsonMap = Map<String, Value>;
 
-#[macro_use]
-pub mod envelope;
+mod ser;
+
 pub mod message;
 pub mod notification;
 pub mod command;
 pub mod session;
-pub mod codec;
 
+mod codec;
 mod helper;
-use self::helper::*;
 
 pub use self::codec::LimeCodec;
-pub use self::envelope::*;
 pub use self::message::{Message, Content};
 pub use self::notification::{Notification, NotificationEvent};
 pub use self::command::Command;
@@ -27,7 +25,7 @@ pub type MsgID = String;
 pub type TimeStamp = u64;
 
 /// Outlines the kinds of envelopes one can receive.
-/// TODO: HOW SHOULD I HANDLE DIFFERENT ENVELOPE TYPES WAAA
+/// TODO: Resource field as separate struct, uri?
 #[derive(Debug)]
 pub enum SealedEnvelope {
     Message(Message),
@@ -37,11 +35,6 @@ pub enum SealedEnvelope {
     SessionRes(SessionResponse),
     Unknown(JsonMap),
 }
-
-// SerDe section
-
-use serde::{Serialize, Serializer, Deserialize, Deserializer};
-use serde::de::{Visitor, MapVisitor};
 
 /// When an Error occurs, this will exist.
 /// TODO: Use this for other structs aside from just Notification.
