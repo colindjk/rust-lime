@@ -1,7 +1,7 @@
 extern crate protocol_manager;
 extern crate serde_json;
 
-use protocol_manager::lime::SealedEnvelope;
+use protocol_manager::envelope::SealedEnvelope;
 use serde_json::from_str;
 use serde_json::Value::*;
 
@@ -29,7 +29,7 @@ fn message_basic() {
 
 #[test]
 fn notification_basic() {
-    use protocol_manager::lime::NotificationEvent::*;
+    use protocol_manager::envelope::NotificationEvent::*;
 
     let notification_json = r#"{
             "id": "48600604-ce09-479c-b985-1195b196fe8e",
@@ -55,8 +55,8 @@ fn notification_basic() {
 
 #[test]
 fn notification_failure() {
-    use protocol_manager::lime::NotificationEvent::*;
-    use protocol_manager::lime::ErrReason;
+    use protocol_manager::envelope::NotificationEvent::*;
+    use protocol_manager::envelope::ErrReason;
 
     let notification_json = r#"{
             "id": "9d0c4fea-75c7-432a-a164-c1a219bc17a8",
