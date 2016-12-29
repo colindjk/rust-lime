@@ -1,5 +1,5 @@
 use serde::ser::{Serialize, Serializer};
-use envelope::{JsonMap, ErrReason};
+use envelope::{JsonMap, ErrReason, MsgID};
 use envelope::helper::CommandStatusHelper;
 use envelope::command::*;
 
@@ -14,7 +14,7 @@ impl Serialize for Command {
             to: Option<&'a str>,
             from: Option<&'a str>,
             pp: Option<&'a str>,
-            id: Option<&'a str>,
+            id: Option<&'a MsgID>,
             metadata: Option<&'a JsonMap>,
 
             method: &'a CommandMethod,
@@ -40,7 +40,7 @@ impl Serialize for Command {
             to: self.to.as_ref().map(|s| &**s),
             from: self.from.as_ref().map(|s| &**s),
             pp: self.pp.as_ref().map(|s| &**s),
-            id: self.id.as_ref().map(|s| &**s),
+            id: self.id.as_ref(),
             metadata: self.metadata.as_ref(),
 
             method: &self.method,

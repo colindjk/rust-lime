@@ -1,5 +1,5 @@
 use serde::ser::{Serialize, Serializer};
-use envelope::{JsonMap, ErrReason};
+use envelope::{JsonMap, ErrReason, MsgID};
 use envelope::helper::SessionStateHelper;
 use envelope::session::*;
 
@@ -16,7 +16,7 @@ impl Serialize for SessionRequest {
             to: Option<&'a str>,
             from: Option<&'a str>,
             pp: Option<&'a str>,
-            id: &'a str,
+            id: &'a MsgID,
             metadata: Option<&'a JsonMap>,
 
             state: &'a SessionStateHelper,
@@ -70,7 +70,7 @@ impl Serialize for SessionResponse {
             to: Option<&'a str>,
             from: Option<&'a str>,
             pp: Option<&'a str>,
-            id: &'a str,
+            id: &'a MsgID,
             metadata: Option<&'a JsonMap>,
 
             state: &'a SessionStateHelper,

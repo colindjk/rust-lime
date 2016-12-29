@@ -1,6 +1,9 @@
 
+pub mod uri;
+
 pub enum Resource {
     Account(Account),
+    Capability(Capability),
 }
 
 /// Represents the user information as a series of options.

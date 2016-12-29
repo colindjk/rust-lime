@@ -15,6 +15,7 @@ pub mod session;
 
 // Types heald by envelopes
 pub mod reason;
+pub mod resources;
 
 mod ser;
 mod codec;
@@ -31,8 +32,13 @@ pub use self::reason::Reason as ErrReason;
 
 pub type Node = String;
 pub type Resources = Value;
-pub type MsgID = String;
+pub type MsgID = u64;
 pub type TimeStamp = u64;
+
+/// Known / supported types of envelopes.
+pub enum EnvelopeType {
+    Message, Notification, Command, Session
+}
 
 /// Outlines the kinds of envelopes one can receive.
 /// TODO: Resource field as separate struct, uri?
@@ -44,6 +50,24 @@ pub enum SealedEnvelope {
     SessionReq(SessionRequest),
     SessionRes(SessionResponse),
     Unknown(JsonMap),
+}
+
+impl SealedEnvelope {
+    pub fn id(&self) -> Option<MsgID> {
+        use self::SealedEnvelope::*;
+        match *self {
+            Message(ref val) => val.id,
+            Notification(ref val) => Some(val.id),
+            Command(ref val) => val.id,
+            SessionReq(ref val) => Some(val.id),
+            SessionRes(ref val) => Some(val.id),
+            Unknown(ref map) => {
+                if let Some(val) = map.get("id") {
+                    val.as_u64()
+                } else { None }
+            },
+        }
+    }
 }
 
 /// Trait for all envelope related types.

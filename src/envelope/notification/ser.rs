@@ -1,6 +1,6 @@
 // Thanks to github user 'dtolnay' for help with the following code...
 use serde::ser::{Serialize, Serializer};
-use envelope::{JsonMap, ErrReason};
+use envelope::{JsonMap, ErrReason, MsgID};
 use envelope::helper::NotificationEventHelper;
 use envelope::notification::*;
 
@@ -15,7 +15,7 @@ impl Serialize for Notification {
             to: Option<&'a str>,
             from: Option<&'a str>,
             pp: Option<&'a str>,
-            id: &'a str,
+            id: &'a MsgID,
             metadata: Option<&'a JsonMap>,
 
             event: NotificationEventHelper,

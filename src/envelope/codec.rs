@@ -10,8 +10,8 @@ use envelope::{ SealedEnvelope, DELIMITER };
 pub struct LimeCodec;
 
 impl Codec for LimeCodec {
-    type In = SealedEnvelope;
-    type Out = SealedEnvelope;
+    type In = (u64, SealedEnvelope);
+    type Out = (u64, SealedEnvelope);
 
     fn decode(&mut self, buf: &mut EasyBuf)
               -> Result<Option<Self::In>, io::Error> {
@@ -19,10 +19,12 @@ impl Codec for LimeCodec {
             Some(index) => {
                 let buf = buf.drain_to(index + 1);
                 use serde_json::from_slice;
-                if let Ok(envelope) = from_slice(buf.as_slice()) {
-                    Ok(Some(envelope))
+                if let Ok(e) = from_slice::<SealedEnvelope>(buf.as_slice()) {
+                    Ok(Some((e.id().unwrap_or(0), e)))
                 } else {
-                    unimplemented!()
+                    Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        "Failed to decode object".to_string()))
                 }
             }
             None => Ok(None)
@@ -31,7 +33,7 @@ impl Codec for LimeCodec {
 
     fn encode(&mut self, msg: Self::Out, buf: &mut Vec<u8>) -> io::Result<()> {
         use serde_json::ser::to_vec;
-        if let Ok(mut json) = to_vec(&msg) {
+        if let Ok(mut json) = to_vec(&msg.1) {
             buf.append(&mut json);
             buf.push(DELIMITER.clone());
             Ok(())
