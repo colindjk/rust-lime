@@ -47,8 +47,7 @@ pub enum SealedEnvelope {
     Message(Message),
     Notification(Notification),
     Command(Command),
-    SessionReq(SessionRequest),
-    SessionRes(SessionResponse),
+    Session(Session),
     Unknown(JsonMap),
 }
 
@@ -59,8 +58,7 @@ impl SealedEnvelope {
             Message(ref val) => val.id,
             Notification(ref val) => Some(val.id),
             Command(ref val) => val.id,
-            SessionReq(ref val) => Some(val.id),
-            SessionRes(ref val) => Some(val.id),
+            Session(ref val) => Some(val.id),
             Unknown(ref map) => {
                 if let Some(val) = map.get("id") {
                     val.as_u64()

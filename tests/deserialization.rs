@@ -1,7 +1,7 @@
-extern crate protocol_manager;
+extern crate protocol_manager as rust_lime;
 extern crate serde_json;
 
-use protocol_manager::envelope::SealedEnvelope;
+use rust_lime::envelope::SealedEnvelope;
 use serde_json::from_str;
 use serde_json::Value::*;
 
@@ -29,10 +29,10 @@ fn message_basic() {
 
 #[test]
 fn notification_basic() {
-    use protocol_manager::envelope::NotificationEvent::*;
+    use rust_lime::envelope::NotificationEvent::*;
 
     let notification_json = r#"{
-            "id": "48600604-ce09-479c-b985-1195b196fe8e",
+            "id": "54321",
             "from": "skyler@breakingbad.com/bedroom",
             "to": "heisenberg@breakingbad.com/bedroom",
             "event": "received"
@@ -44,8 +44,7 @@ fn notification_basic() {
     } else {
         panic!("Non-notification envelope parsed from json with event")
     };
-    assert_eq!(notification.id,
-               "48600604-ce09-479c-b985-1195b196fe8e".to_string());
+    assert_eq!(notification.id, 54321);
     assert_eq!(notification.to,
                Some("heisenberg@breakingbad.com/bedroom".to_string()));
     assert_eq!(notification.from,
@@ -55,15 +54,15 @@ fn notification_basic() {
 
 #[test]
 fn notification_failure() {
-    use protocol_manager::envelope::NotificationEvent::*;
-    use protocol_manager::envelope::ErrReason;
+    use rust_lime::envelope::NotificationEvent::*;
+    use rust_lime::envelope::ErrReason;
 
     let notification_json = r#"{
-            "id": "9d0c4fea-75c7-432a-a164-c1a219bc17a8",
+            "id": "12345",
             "to": "skyler@breakingbad.com/bedroom",
             "event": "failed",
             "reason": {
-                "code": 42,
+                "code": 12,
                 "description": "The message destination was not found"
             }
         }"#;
@@ -74,13 +73,14 @@ fn notification_failure() {
     } else {
         panic!("Non-notification envelope parsed from json with event")
     };
-    assert_eq!(notification.id,
-               "9d0c4fea-75c7-432a-a164-c1a219bc17a8".to_string());
+    assert_eq!(notification.id, 12345);
     assert_eq!(notification.to,
                Some("skyler@breakingbad.com/bedroom".to_string()));
     assert_eq!(notification.from, None);
-    assert_eq!(notification.event,
-            Failed(ErrReason { code: 42, description:
-                Some("The message destination was not found"
-                     .to_string()) }));
+
+    use rust_lime::envelope::reason::ReasonCode::*;
+    assert_eq!(notification.event, Failed(ErrReason {
+        code: SessionRegistrationError,
+        description: Some("The message destination was not found"
+            .to_string()) }));
 }

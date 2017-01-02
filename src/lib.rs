@@ -13,8 +13,8 @@ extern crate serde_urlencoded;
 #[macro_use]
 extern crate serde_derive;
 
-pub mod server;
-pub mod client;
+pub mod net;
+//pub mod client; // temporary, the client will be back!
 #[macro_use]
 pub mod envelope;
 pub mod utils;

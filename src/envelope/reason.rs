@@ -15,3 +15,11 @@ ReasonCode {
     SessionAuthenticationFailed = 13,
 });
 
+// TODO: Implement this.
+//impl From<u64> for ReasonCode {
+    //fn from(i: u64) -> ReasonCode {
+        //use ::serde::de::Deserialize;
+        //from_.unwrap_or(ReasonCode::GeneralError)
+    //}
+//}
+

@@ -1,7 +1,8 @@
 use std::io;
 
 use std::net::SocketAddr;
-use std::io::{Error};
+use std::io;
+
 use futures::{stream, Stream, future, Future, Poll, BoxFuture};
 use tokio_core::net::{TcpListener};
 
@@ -15,7 +16,15 @@ pub struct LimeServer {
     listener: TcpListener,
 };
 
-/// Implementation 
+/// Implementation of the LimeServer. Provides functionality for accepting
+/// connections, and providing Nodes in an un-authenticated state.
+impl LimeServer {
+    /// Creates a new server from a TcpListener.
+    /// TODO: Try to figure out Websockets, HTTP etc.
+    fn bind(addr: &SocketAddr, handle: &Handle) -> io::Result<Self> {
+
+    }
+}
 
 pub struct Nodes {
     inner: Server,
@@ -24,7 +33,7 @@ pub struct Nodes {
 /// A stream of incoming connections, which are evaluated to be Nodes.
 impl Stream for Nodes {
     type Item = Node;
-    type Error = Error;
+    type Error = io::Error;
 
     /// Attempt to make a connection to a Node.
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {

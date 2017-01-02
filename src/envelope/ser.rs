@@ -9,8 +9,7 @@ use envelope::{
     Message,
     Notification,
     Command,
-    SessionRequest, 
-    SessionResponse, 
+    Session, 
 };
 
 use envelope::helper::*;
@@ -126,34 +125,20 @@ impl Deserialize for SealedEnvelope {
                     }
                     (None, None, None, Some(state), Some(id), None) => {
                         let state = into_state(state, reason);
-                        match (encryption, compression, scheme) {
-                            (None, None, None) => {
-                                SealedEnvelope::SessionReq(SessionRequest {
-                                    to: to,
-                                    from: from,
-                                    pp: pp,
-                                    id: id,
-                                    metadata: metadata,
-                                    state: state,
-                                    encryption_options: e_options,
-                                    compression_options: c_options,
-                                    scheme_options: s_options,
-                                })
-                            }
-                            (encryption, compression, scheme) => {
-                                SealedEnvelope::SessionRes(SessionResponse {
-                                    to: to,
-                                    from: from,
-                                    pp: pp,
-                                    id: id,
-                                    metadata: metadata,
-                                    state: state,
-                                    encryption: encryption,
-                                    compression: compression,
-                                    scheme: scheme,
-                                })
-                            }
-                        }
+                        SealedEnvelope::Session(Session {
+                            to: to,
+                            from: from,
+                            pp: pp,
+                            id: id,
+                            metadata: metadata,
+                            state: state,
+                            encryption_options: e_options,
+                            compression_options: c_options,
+                            scheme_options: s_options,
+                            encryption: encryption,
+                            compression: compression,
+                            scheme: scheme,
+                        })
                     }
                     _ => unimplemented!(), // take care of this at some point
                 })
@@ -176,7 +161,7 @@ impl Serialize for SealedEnvelope {
             //SessionReq(ref val)     => val.serialize(serializer),
             //SessionRes(ref val)     => val.serialize(serializer),
             //Unknown(ref val)        => val.serialize(serializer),
-            _ => panic!()
+            _ => unimplemented!()
         }
     }
 }
