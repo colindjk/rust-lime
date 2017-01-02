@@ -9,4 +9,11 @@
 
 //use envelope::LimeCodec;
 
+struct Node {
+
+};
+
+impl Node {
+
+}
 
