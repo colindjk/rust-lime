@@ -14,7 +14,7 @@ use tokio_core::net::{TcpListener};
 pub struct LimeServer {
     addr: SocketAddr,
     listener: TcpListener,
-};
+}
 
 /// Implementation of the LimeServer. Provides functionality for accepting
 /// connections, and providing Nodes in an un-authenticated state.
