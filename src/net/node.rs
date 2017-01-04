@@ -1,19 +1,48 @@
-//use std::str;
-//use std::io::{self, ErrorKind, Write};
+use std::convert::From;
+use std::io;
 
-//use futures::{future, Future, BoxFuture};
-//use tokio_core::io::{Io, Codec, Framed, EasyBuf};
-//use tokio_proto::TcpServer;
-//use tokio_proto::pipeline::ServerProto;
-//use tokio_service::Service;
+use futures::{stream, Stream, Sink};
+use tokio_core::io::{Io, Framed};
+use tokio_core::net::{TcpStream};
 
-//use envelope::LimeCodec;
+use envelope::{LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
+use user::{User};
 
-struct Node {
+/// A client connection is created per incoming connection.
+///
+/// Field 'stream' is the 'Io' object used for client communication.
+/// Field 'user' pertain to potentially logged in user.
+/// The client connection will be split once authenticated via 'Session'
+/// envelopes.
+pub struct ClientConnection<T> {
+    inner: T,
+    user: Option<User>,
+}
 
-};
+impl<T> ClientConnection<T>
+    where T: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
+{
+    pub fn new(io: T) -> io::Result<Self> {
+        panic!()
+    }
+}
 
-impl Node {
+pub struct ClientStream<T> {
+    inner: stream::SplitStream<EnvelopeStream<T>>,
+}
 
+pub struct ClientSink<T> {
+    inner: stream::SplitSink<EnvelopeStream<T>>,
+}
+
+/// 'Io'
+impl<S> From<S> for ClientConnection<EnvelopeStream<S>> where S: Io {
+    fn from(io: S) -> Self {
+        let stream = io.framed(LimeCodec);
+        ClientConnection {
+            inner: stream,
+            user: None,
+        }
+    }
 }
 

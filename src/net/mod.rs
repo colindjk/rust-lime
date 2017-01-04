@@ -1,73 +1,41 @@
-use std::io;
+pub mod node;
 
 use std::net::SocketAddr;
+use std::convert::From;
 use std::io;
 
 use futures::{stream, Stream, future, Future, Poll, BoxFuture};
-use tokio_core::net::{TcpListener};
 
-//use tokio_core::io::{Io, Framed};
-//use envelope::{LimeCodec, SealedEnvelope as Envelope};
+use tokio_core::io::{Io};
+use tokio_core::net;
+use tokio_core::reactor::{Handle};
 
-/// Initial server which can used to accept and work with connections.
+// TODO : Refactor to make sense
+pub use self::node::*;
+
 /// Generally it will be used to accept incoming connections.
-pub struct LimeServer {
-    addr: SocketAddr,
-    listener: TcpListener,
+/// 'L' will be any type of listener, which produces a stream of
+/// ClientConnection structs.
+pub struct LimeServer<L> {
+    addr: Option<SocketAddr>,
+    incoming: L,
 }
 
 /// Implementation of the LimeServer. Provides functionality for accepting
 /// connections, and providing Nodes in an un-authenticated state.
-impl LimeServer {
+impl<L, T> LimeServer<L> where L: Stream<Item=ClientConnection<T>> {
     /// Creates a new server from a TcpListener.
     /// TODO: Try to figure out Websockets, HTTP etc.
-    fn bind(addr: &SocketAddr, handle: &Handle) -> io::Result<Self> {
-
+    fn bind<F>(addr: &SocketAddr, handle: &Handle) -> io::Result<Self>
+    {
+        let lis = net::TcpListener::bind(addr, handle)?;
+        let inc = lis.incoming().map(|(s, _)| ClientConnection::from(s));
+        Ok(LimeServer::<stream::Map<net::Incoming, F>> {
+        //Ok(LimeServer {
+            addr: Some(addr.clone()),
+            incoming: inc,
+        })
     }
+
 }
-
-pub struct Nodes {
-    inner: Server,
-}
-
-/// A stream of incoming connections, which are evaluated to be Nodes.
-impl Stream for Nodes {
-    type Item = Node;
-    type Error = io::Error;
-
-    /// Attempt to make a connection to a Node.
-    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
-
-    }
-}
-
-//pub struct LimeProtocol;
-
-///// TODO: Make sure the Request gets to the right place (user / db?), then start
-///// to worry about the actual response (what the future returns).
-
-///// This, uh... 'hooks up the codec'. Yeah.
-//impl<T: Io + 'static> ServerProto<T> for LimeProtocol {
-    //type Request = Envelope;
-    //type Response = Envelope;
-    //type Error = io::Error;
-    //type Transport = Framed<T, LimeCodec>;
-    //type BindTransport = io::Result<Framed<T, LimeCodec>>;
-
-    //fn bind_transport(&self, io: T) -> io::Result<Framed<T, LimeCodec>> {
-        //Ok(io.framed(LimeCodec))
-    //}
-//}
-
-//impl Service for Server {
-    //type Request = Envelope;
-    //type Response = Envelope;
-    //type Error = io::Error;
-    //type Future = BoxFuture<Envelope, io::Error>;
-
-    ///// For now we'll just return the message that was sent
-    //fn call(&self, req: Envelope) -> Self::Future {
-        //future::finished(req).boxed()
-    //}
-//}
 
