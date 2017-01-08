@@ -1,5 +1,6 @@
 use tokio_core::io::{
     Codec,
+    Framed,
     EasyBuf
 };
 
@@ -7,11 +8,14 @@ use std::io;
 use std::str;
 use envelope::{ SealedEnvelope, DELIMITER };
 
+/// Type used by the Node structs for input and output, allowing a user to
+/// set up a Node which communicates over any type of network connection.
+pub type EnvelopeStream<T> = Framed<T, LimeCodec>;
 pub struct LimeCodec;
 
 impl Codec for LimeCodec {
-    type In = (u64, SealedEnvelope);
-    type Out = (u64, SealedEnvelope);
+    type In = SealedEnvelope;
+    type Out = SealedEnvelope;
 
     fn decode(&mut self, buf: &mut EasyBuf)
               -> Result<Option<Self::In>, io::Error> {
@@ -20,7 +24,7 @@ impl Codec for LimeCodec {
                 let buf = buf.drain_to(index + 1);
                 use serde_json::from_slice;
                 if let Ok(e) = from_slice::<SealedEnvelope>(buf.as_slice()) {
-                    Ok(Some((e.id().unwrap_or(0), e)))
+                    Ok(Some(e))
                 } else {
                     Err(io::Error::new(
                         io::ErrorKind::Other,
@@ -33,7 +37,7 @@ impl Codec for LimeCodec {
 
     fn encode(&mut self, msg: Self::Out, buf: &mut Vec<u8>) -> io::Result<()> {
         use serde_json::ser::to_vec;
-        if let Ok(mut json) = to_vec(&msg.1) {
+        if let Ok(mut json) = to_vec(&msg) {
             buf.append(&mut json);
             buf.push(DELIMITER.clone());
             Ok(())

@@ -21,7 +21,7 @@ mod ser;
 mod codec;
 mod helper;
 
-pub use self::codec::LimeCodec;
+pub use self::codec::{LimeCodec, EnvelopeStream};
 
 pub use self::message::{Message, Content};
 pub use self::notification::{Notification, NotificationEvent};
@@ -31,6 +31,7 @@ pub use self::session::*;
 pub use self::reason::Reason as ErrReason;
 
 pub type Node = String;
+pub type UserID = String;
 pub type Resources = Value;
 pub type MsgID = u64;
 pub type TimeStamp = u64;
@@ -67,6 +68,14 @@ impl SealedEnvelope {
         }
     }
 }
+
+// TODO : Create the Node object n stuff.
+//#[derive(PartialEq, Clone, Copy, Debug)]
+//pub struct Node<'a> {
+    //user_id: &'a str,
+    //domain: &'a str,
+    //instance: &'a str,
+//}
 
 /// Trait for all envelope related types.
 /// TODO: Include 'pp' and 'metadata'
