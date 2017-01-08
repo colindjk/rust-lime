@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::convert::From;
 use std::io;
 
@@ -22,23 +23,56 @@ pub struct ClientConnection<T> {
 impl<T> ClientConnection<T>
     where T: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
 {
-    pub fn new(io: T) -> io::Result<Self> {
+    pub fn new(io: T) -> Self {
         panic!()
     }
 }
 
+/// After a split, ClientStream is created which will be the recieving end of
+/// a connection.
 pub struct ClientStream<T> {
-    inner: stream::SplitStream<EnvelopeStream<T>>,
+    inner: stream::SplitStream<T>,
 }
 
+impl<T> ClientStream<T>
+    where T: Stream<Item=Envelope>
+{
+    pub fn new(io: T) -> Self {
+        panic!()
+    }
+}
+
+/// Designed to make it easier to send over a connection / channel.
+/// Not sure what else.
 pub struct ClientSink<T> {
-    inner: stream::SplitSink<EnvelopeStream<T>>,
+    inner: stream::SplitSink<T>,
+}
+
+impl<T> ClientSink<T>
+    where T: Sink<SinkItem=Envelope>
+{
+    pub fn new(io: T) -> Self {
+        panic!()
+    }
 }
 
 /// 'Io'
 impl<S> From<S> for ClientConnection<EnvelopeStream<S>> where S: Io {
     fn from(io: S) -> Self {
         let stream = io.framed(LimeCodec);
+        ClientConnection {
+            inner: stream,
+            user: None,
+        }
+    }
+}
+
+/// 'Io'
+impl From<(TcpStream, SocketAddr)>
+        for ClientConnection<EnvelopeStream<TcpStream>> {
+    fn from(connection: (TcpStream, SocketAddr)) -> Self {
+        let (stream, _) = connection;
+        let stream = stream.framed(LimeCodec);
         ClientConnection {
             inner: stream,
             user: None,
