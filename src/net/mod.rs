@@ -1,14 +1,17 @@
 pub mod node;
 
 use std::net::SocketAddr;
-use std::convert::From;
+use std::convert::{From};
 use std::io;
 
 use futures::{stream, Stream, future, Future, Poll, BoxFuture};
 
-use tokio_core::io::{Io};
+use tokio_core::io::{Framed, Io};
 use tokio_core::net;
-use tokio_core::reactor::{Handle};
+use tokio_core::reactor;
+
+// the locals
+use envelope::{LimeCodec, EnvelopeStream};
 
 // TODO : Refactor to make sense
 pub use self::node::*;
@@ -17,7 +20,7 @@ pub use self::node::*;
 /// 'L' will be any type of listener, which produces a stream of
 /// ClientConnection structs.
 pub struct LimeServer<L> {
-    addr: Option<SocketAddr>,
+    addr: SocketAddr,
     incoming: L,
 }
 
@@ -26,16 +29,21 @@ pub struct LimeServer<L> {
 impl<L, T> LimeServer<L> where L: Stream<Item=ClientConnection<T>> {
     /// Creates a new server from a TcpListener.
     /// TODO: Try to figure out Websockets, HTTP etc.
-    fn bind<F>(addr: &SocketAddr, handle: &Handle) -> io::Result<Self>
-    {
-        let lis = net::TcpListener::bind(addr, handle)?;
-        let inc = lis.incoming().map(|(s, _)| ClientConnection::from(s));
-        Ok(LimeServer::<stream::Map<net::Incoming, F>> {
-        //Ok(LimeServer {
-            addr: Some(addr.clone()),
-            incoming: inc,
-        })
+    pub fn new(addr: &SocketAddr, io: L) -> Self {
+        LimeServer {
+            addr: addr.clone(),
+            incoming: io,
+        }
     }
+}
 
+/// TODO: Figure out how returning a future would help.
+pub fn example(addr: &SocketAddr, listen: net::TcpListener)
+        -> LimeServer
+        <impl Stream<Item=ClientConnection<EnvelopeStream<net::TcpStream>>>>
+{
+    LimeServer::new(addr, listen.incoming().map(
+        |(stream, _)| ClientConnection::from(stream)
+    ))
 }
 
