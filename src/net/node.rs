@@ -1,13 +1,19 @@
 use std::net::SocketAddr;
 use std::convert::From;
 use std::io;
+use std::sync::Arc;
 
-use futures::{stream, Stream, Sink};
+use futures::{stream, future, sync, Future, Stream, Sink, Poll};
 use tokio_core::io::{Io, Framed};
 use tokio_core::net::{TcpStream};
+use tokio_service::{Service, NewService};
 
 use envelope::{LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
 use user::{User};
+
+use super::NodeMap;
+
+type FutEnvelope = Future<Item=Envelope, Error=io::Error>;
 
 /// A client connection is created per incoming connection.
 ///
@@ -15,46 +21,69 @@ use user::{User};
 /// Field 'user' pertain to potentially logged in user.
 /// The client connection will be split once authenticated via 'Session'
 /// envelopes.
-pub struct ClientConnection<T> {
-    inner: T,
-    user: Option<User>,
+pub struct ClientConnection<S> {
+    inner: S,
 }
 
-impl<T> ClientConnection<T>
-    where T: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
+/// Implementation
+impl<S> ClientConnection<S>
+    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
 {
-    pub fn new(io: T) -> Self {
-        panic!()
+    pub fn new(io: S) -> Self { ClientConnection { inner: io } }
+
+    /// The task of responding to a request. 
+    pub fn respond(req: Envelope) -> Box<FutEnvelope> {
+        unimplemented!()
     }
 }
 
-/// After a split, ClientStream is created which will be the recieving end of
-/// a connection.
-pub struct ClientStream<T> {
-    inner: stream::SplitStream<T>,
+/// Service implementation for the 'ClientConnection' struct.
+impl<S> Service for ClientConnection<S>
+    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
+{
+    type Request = Envelope;
+    type Response = Envelope;
+    type Error = io::Error;
+    type Future = Box<FutEnvelope>;
+
+    fn call(&self, req: Envelope) -> Self::Future {
+        unimplemented!()
+    }
 }
 
-impl<T> ClientStream<T>
-    where T: Stream<Item=Envelope>
+/// After a split, ClientSession is created which will be the recieving end of
+/// a connection.
+///
+/// Created as a part of a succesful login.
+pub struct ClientSession<S> {
+    inner: sync::BiLock<ClientConnection<S>>,
+    user: User,
+    peers: Arc<NodeMap<S>>,
+}
+
+impl<S> ClientSession<S>
+    where S: Stream<Item=Envelope> + S: Sink<SinkItem=Envelope>
 {
-    pub fn new(io: T) -> Self {
+    pub fn new(io: S) -> Self {
         panic!()
     }
 }
 
 /// Designed to make it easier to send over a connection / channel.
 /// Not sure what else.
-pub struct ClientSink<T> {
-    inner: stream::SplitSink<T>,
+pub struct ClientSink<S> {
+    inner: stream::SplitSink<S>,
 }
 
-impl<T> ClientSink<T>
-    where T: Sink<SinkItem=Envelope>
+impl<S> ClientSink<S>
+    where S: Sink<SinkItem=Envelope>
 {
-    pub fn new(io: T) -> Self {
+    pub fn new(io: S) -> Self {
         panic!()
     }
 }
+
+//impl Service 
 
 /// 'Io'
 impl<S> From<S> for ClientConnection<EnvelopeStream<S>> where S: Io {
