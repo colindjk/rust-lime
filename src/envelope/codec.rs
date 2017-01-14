@@ -18,7 +18,7 @@ impl Codec for LimeCodec {
     type Out = SealedEnvelope;
 
     fn decode(&mut self, buf: &mut EasyBuf)
-              -> Result<Option<Self::In>, io::Error> {
+            -> Result<Option<Self::In>, io::Error> {
         match buf.as_slice().iter().position(|&b| b == DELIMITER) {
             Some(index) => {
                 let buf = buf.drain_to(index + 1);
@@ -49,3 +49,25 @@ impl Codec for LimeCodec {
 
 }
 
+pub struct LimeMultiCodec;
+
+impl Codec for LimeMultiCodec {
+    type In = (u64, SealedEnvelope);
+    type Out = (u64, SealedEnvelope);
+
+    fn decode(&mut self, buf: &mut EasyBuf)
+            -> Result<Option<Self::In>, io::Error> {
+        match LimeCodec.decode(buf) {
+            Ok(Some(envelope)) =>
+                Ok(Some((envelope.id().unwrap_or(0), envelope))),
+            Ok(None) => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
+    fn encode(&mut self, msg: Self::Out, buf: &mut Vec<u8>) -> io::Result<()> {
+        let (_, msg) = msg;
+        LimeCodec.encode(msg, buf)
+    }
+
+}
