@@ -8,7 +8,7 @@ use tokio_core::io::{Io, Framed};
 use tokio_core::net::{TcpStream};
 use tokio_service::{Service, NewService};
 
-use envelope::{LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
+use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
 use user::{User};
 
 use super::NodeMap;
@@ -31,23 +31,28 @@ impl<S> ClientConnection<S>
 {
     pub fn new(io: S) -> Self { ClientConnection { inner: io } }
 
-    /// The task of responding to a request. 
-    pub fn respond(req: Envelope) -> Box<FutEnvelope> {
-        unimplemented!()
+    pub fn authenticate(self) -> Authentication<S> {
+        panic!()
     }
 }
 
-/// Service implementation for the 'ClientConnection' struct.
-impl<S> Service for ClientConnection<S>
-    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
-{
-    type Request = Envelope;
-    type Response = Envelope;
-    type Error = io::Error;
-    type Future = Box<FutEnvelope>;
+/// This will be the future representing the authentication process.
+pub struct Authentication<S> {
+    conn: ClientConnection<S>,
+    users: Arc<NodeMap<S>>,
+    user: Node,
+    password: String,
+    authenticated: bool,
+}
 
-    fn call(&self, req: Envelope) -> Self::Future {
-        unimplemented!()
+impl<S> Future for Authentication<S> {
+    type Item = (ClientSink<S>, ClientSession<S>);
+    type Error = io::Error;
+
+    /// This is where some sort of database query would occur.
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        // TODO: Authentic things
+        panic!("Poll'd authentication future")
     }
 }
 
@@ -61,8 +66,25 @@ pub struct ClientSession<S> {
     peers: Arc<NodeMap<S>>,
 }
 
+/// Service implementation for the 'ClientSession' struct.
+///
+/// ClientSession implements the Service trait to avoid having a blocking event
+/// occur on the stream of incoming messages when not necessary.
+impl<S> Service for ClientSession<S>
+    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
+{
+    type Request = Envelope;
+    type Response = Envelope;
+    type Error = io::Error;
+    type Future = Box<FutEnvelope>;
+
+    fn call(&self, req: Envelope) -> Self::Future {
+        unimplemented!()
+    }
+}
+
 impl<S> ClientSession<S>
-    where S: Stream<Item=Envelope> + S: Sink<SinkItem=Envelope>
+    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
 {
     pub fn new(io: S) -> Self {
         panic!()
@@ -72,7 +94,7 @@ impl<S> ClientSession<S>
 /// Designed to make it easier to send over a connection / channel.
 /// Not sure what else.
 pub struct ClientSink<S> {
-    inner: stream::SplitSink<S>,
+    inner: sync::BiLock<ClientConnection<S>>,
 }
 
 impl<S> ClientSink<S>
@@ -89,10 +111,7 @@ impl<S> ClientSink<S>
 impl<S> From<S> for ClientConnection<EnvelopeStream<S>> where S: Io {
     fn from(io: S) -> Self {
         let stream = io.framed(LimeCodec);
-        ClientConnection {
-            inner: stream,
-            user: None,
-        }
+        ClientConnection { inner: stream }
     }
 }
 
@@ -102,10 +121,7 @@ impl From<(TcpStream, SocketAddr)>
     fn from(connection: (TcpStream, SocketAddr)) -> Self {
         let (stream, _) = connection;
         let stream = stream.framed(LimeCodec);
-        ClientConnection {
-            inner: stream,
-            user: None,
-        }
+        ClientConnection { inner: stream }
     }
 }
 
