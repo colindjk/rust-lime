@@ -51,8 +51,7 @@ impl<S> Future for Authentication<S> {
 
     /// This is where some sort of database query would occur.
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        // TODO: Authentic things
-        panic!("Poll'd authentication future")
+
     }
 }
 
