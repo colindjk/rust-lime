@@ -11,3 +11,15 @@ support for XML is... okay, and not quite up to par with JSON parsing, so that's
 where I'll stay for now. I hope to work on the XML parsing at some point, just
 not the focus now.
 
+
+Server: messenger.com
+Go to that address
+
+TcpConnection with the server.
+
+TcpConnection -> Handshake -> Authentication -> Session -> EndOfSession
+
+Handshake {
+    TcpConnection
+}
+
