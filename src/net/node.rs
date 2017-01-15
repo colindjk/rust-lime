@@ -3,12 +3,14 @@ use std::convert::From;
 use std::io;
 use std::sync::Arc;
 
-use futures::{stream, future, sync, Future, Stream, Sink, Poll};
+use futures::{stream, future, sync, Future, Stream, Sink, Async, Poll};
 use tokio_core::io::{Io, Framed};
 use tokio_core::net::{TcpStream};
 use tokio_service::{Service, NewService};
 
-use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
+use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope,
+    Session,
+};
 use user::{User};
 
 use super::NodeMap;
@@ -26,6 +28,10 @@ pub struct ClientConnection<S> {
 }
 
 /// Implementation
+/// TODO: Create an error type for connection stuff.
+/// Note:
+/// -   Either have two error types, one for critical errors w/ system crash & bang
+/// -   Or one error type and pass it up or handle it / panic when deemed appropriate.
 impl<S> ClientConnection<S>
     where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
 {
@@ -36,22 +42,72 @@ impl<S> ClientConnection<S>
     }
 }
 
+impl<S> Stream for ClientConnection<S>
+    where S: Stream<Item=Envelope, Error=io::Error> + Sink<SinkItem=Envelope>
+{
+    type Item = Envelope;
+    type Error = io::Error;
+    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
+        self.inner.poll()
+    }
+}
+
 /// This will be the future representing the authentication process.
 pub struct Authentication<S> {
-    conn: ClientConnection<S>,
-    users: Arc<NodeMap<S>>,
-    user: Node,
+    conn: Option<ClientConnection<S>>,
+    peers: Arc<NodeMap<S>>, // TODO: Make this a ref to something more pertinent.
+    user_id: Option<Node>,
     password: String,
     authenticated: bool,
 }
 
-impl<S> Future for Authentication<S> {
+impl<S> Authentication<S>
+    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
+{
+    /// TODO: Implement an authentication update thingy.
+    pub fn update_auth(&mut self, envelope: Session) {
+        self.authenticated = true;
+    }
+}
+
+impl<S> Future for Authentication<S>
+    where S: Stream<Item=Envelope, Error=io::Error> + Sink<SinkItem=Envelope>
+{
     type Item = (ClientSink<S>, ClientSession<S>);
     type Error = io::Error;
 
     /// This is where some sort of database query would occur.
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        match self.conn.as_mut().unwrap().poll() {
+            Ok(Async::Ready(Some(env))) => {
+                if let Envelope::Session(s) = env {
+                    self.update_auth(s);
+                } else {
+                    panic!("Received non-session envelope \
+                           during session authentication.");
+                };
+            },
+            Ok(Async::Ready(None)) => panic!("Implement EOF during authentication"),
+            Ok(Async::NotReady) => return Ok(Async::NotReady),
+            Err(_) => panic!("Error envelope from stream \
+                                    during Authentication"),
+        };
 
+        if self.authenticated {
+            let conn = self.conn.take().unwrap();
+            let (sink, session) = sync::BiLock::new(conn);
+            Ok(Async::Ready((
+                ClientSink { inner: sink, },
+                ClientSession {
+                    inner: session,
+                    user_id: self.user_id.take().unwrap(),
+                    user: User,
+                    peers: self.peers.clone(),
+                }
+            )))
+        } else {
+            Ok(Async::NotReady)
+        }
     }
 }
 
@@ -61,6 +117,7 @@ impl<S> Future for Authentication<S> {
 /// Created as a part of a succesful login.
 pub struct ClientSession<S> {
     inner: sync::BiLock<ClientConnection<S>>,
+    user_id: Node,
     user: User,
     peers: Arc<NodeMap<S>>,
 }
