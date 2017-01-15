@@ -2,6 +2,5 @@
 //use net::Node;
 use envelope::UserID;
 
-pub struct User {
-    id: UserID,
-}
+/// TODO: Implement a User struct.
+pub struct User;
