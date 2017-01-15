@@ -26,6 +26,21 @@ pub struct Session {
     pub scheme: Option<Value>,
 }
 
+pub enum EncryptionOptions {
+    #[serde(rename="none")] Nil,
+    #[serde(rename="tls")]  Tls,
+}
+
+pub enum CompressionOptions {
+    #[serde(rename="none")] Nil,
+    #[serde(rename="gzip")] GZip,
+}
+
+pub enum SchemeOptions {
+    #[serde(rename="guest")] Guest,
+    #[serde(rename="plain")] Plain,
+}
+
 #[derive(Debug, PartialEq)]
 pub enum SessionState {
     New,
