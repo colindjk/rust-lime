@@ -19,7 +19,7 @@ use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
 pub use self::node::*;
 
 // TODO: Put a Mutex around that ClientSink!
-type NodeMap<S> = HashMap<Node, ClientSink<S>>;
+type NodeMap<S> = Arc<Mutex<HashMap<Node, ClientSink<S>>>>;
 type ArcMut<T> = Arc<Mutex<T>>;
 
 /// Generally it will be used to accept incoming connections.
@@ -29,7 +29,7 @@ type ArcMut<T> = Arc<Mutex<T>>;
 /// TODO: Figure out a way to handle online users, is a HashMap optimal?
 pub struct LimeServer<S> {
     addr: SocketAddr,
-    users: Arc<NodeMap<S>>,
+    users: NodeMap<S>,
 }
 
 /// Implementation of the LimeServer. Provides functionality for accepting
@@ -42,7 +42,7 @@ impl<S> LimeServer<S>
     pub fn new(addr: &SocketAddr) -> Self {
         LimeServer {
             addr: addr.clone(),
-            users: Arc::new(HashMap::new())
+            users: Arc::new(Mutex::new(HashMap::new()))
         }
     }
 }

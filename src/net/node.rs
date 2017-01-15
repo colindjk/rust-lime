@@ -3,7 +3,7 @@ use std::convert::From;
 use std::io;
 use std::sync::Arc;
 
-use futures::{stream, future, sync, Future, Stream, Sink, Async, Poll};
+use futures::{stream, future, sync, Future, BoxFuture, Stream, Sink, Async, Poll};
 use tokio_core::io::{Io, Framed};
 use tokio_core::net::{TcpStream};
 use tokio_service::{Service, NewService};
@@ -24,7 +24,7 @@ type FutEnvelope = Future<Item=Envelope, Error=io::Error>;
 /// The client connection will be split once authenticated via 'Session'
 /// envelopes.
 pub struct ClientConnection<S> {
-    inner: S,
+    inner: Box<S>,
 }
 
 /// Implementation
@@ -35,9 +35,10 @@ pub struct ClientConnection<S> {
 impl<S> ClientConnection<S>
     where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
 {
-    pub fn new(io: S) -> Self { ClientConnection { inner: io } }
+    pub fn new(io: S) -> Self { ClientConnection { inner: Box::new(io) } }
 
-    pub fn authenticate(self) -> Authentication<S> {
+    /// TODO: How do we get the user_id?
+    pub fn handshake(self) -> Handshake<S> {
         panic!()
     }
 }
@@ -47,18 +48,48 @@ impl<S> Stream for ClientConnection<S>
 {
     type Item = Envelope;
     type Error = io::Error;
+
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
         self.inner.poll()
+    }
+}
+
+/// Future which will evaluate to a properly configured connection.
+///
+/// This occurs during the 'Negotiation' phase of the overall session.
+pub struct Handshake<S> {
+    conn: Option<ClientConnection<S>>,
+}
+
+impl<S> Service for Handshake<S> {
+    type Request = Session;
+    type Response = Session;
+    type Error = io::Error;
+    type Future = BoxFuture<Self::Response, Self::Error>;
+
+    fn call(&self, req: Self::Request) -> Self::Future {
+        future::ok(req).boxed()
     }
 }
 
 /// This will be the future representing the authentication process.
 pub struct Authentication<S> {
     conn: Option<ClientConnection<S>>,
-    peers: Arc<NodeMap<S>>, // TODO: Make this a ref to something more pertinent.
+    peers: NodeMap<S>, // TODO: Make this a ref to something more pertinent.
     user_id: Option<Node>,
     password: String,
     authenticated: bool,
+}
+
+impl<S> Service for Authentication<S> {
+    type Request = Session;
+    type Response = Session;
+    type Error = io::Error;
+    type Future = BoxFuture<Self::Response, Self::Error>;
+
+    fn call(&self, req: Self::Request) -> Self::Future {
+        future::ok(req).boxed()
+    }
 }
 
 impl<S> Authentication<S>
@@ -119,7 +150,7 @@ pub struct ClientSession<S> {
     inner: sync::BiLock<ClientConnection<S>>,
     user_id: Node,
     user: User,
-    peers: Arc<NodeMap<S>>,
+    peers: NodeMap<S>,
 }
 
 /// Service implementation for the 'ClientSession' struct.
@@ -167,7 +198,7 @@ impl<S> ClientSink<S>
 impl<S> From<S> for ClientConnection<EnvelopeStream<S>> where S: Io {
     fn from(io: S) -> Self {
         let stream = io.framed(LimeCodec);
-        ClientConnection { inner: stream }
+        ClientConnection { inner: Box::new(stream) }
     }
 }
 
@@ -177,7 +208,7 @@ impl From<(TcpStream, SocketAddr)>
     fn from(connection: (TcpStream, SocketAddr)) -> Self {
         let (stream, _) = connection;
         let stream = stream.framed(LimeCodec);
-        ClientConnection { inner: stream }
+        ClientConnection { inner: Box::new(stream) }
     }
 }
 
