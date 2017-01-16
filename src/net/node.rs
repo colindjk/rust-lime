@@ -11,6 +11,11 @@ use tokio_service::{Service, NewService};
 use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope,
     Session,
 };
+use envelope::session::{
+    EncryptionOptions,
+    CompressionOptions,
+    SchemeOptions,
+};
 use user::{User};
 
 use super::NodeMap;
@@ -36,11 +41,6 @@ impl<S> ClientConnection<S>
     where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
 {
     pub fn new(io: S) -> Self { ClientConnection { inner: Box::new(io) } }
-
-    /// TODO: How do we get the user_id?
-    pub fn handshake(self) -> Handshake<S> {
-        panic!()
-    }
 }
 
 impl<S> Stream for ClientConnection<S>
@@ -56,12 +56,15 @@ impl<S> Stream for ClientConnection<S>
 
 /// Future which will evaluate to a properly configured connection.
 ///
-/// This occurs during the 'Negotiation' phase of the overall session.
-pub struct Handshake<S> {
-    conn: Option<ClientConnection<S>>,
+/// Handshake, also known as the 'Negotiating' phase of the overall session.
+pub struct Handshake {
+    conn: Option<Framed<Io, LimeCodec>>,
+    user_id: Option<Node>,
+    encryption: EncryptionOptions,
+    compression: CompressionOptions,
 }
 
-impl<S> Service for Handshake<S> {
+impl Service for Handshake {
     type Request = Session;
     type Response = Session;
     type Error = io::Error;
@@ -69,6 +72,17 @@ impl<S> Service for Handshake<S> {
 
     fn call(&self, req: Self::Request) -> Self::Future {
         future::ok(req).boxed()
+    }
+}
+
+impl Future for Handshake
+{
+    type Item = Authentication<S>;
+    type Error = io::Error;
+
+    /// This is where some sort of database query would occur.
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        unimplemented!()
     }
 }
 
@@ -81,6 +95,7 @@ pub struct Authentication<S> {
     user_id: Option<Node>,
     password: String,
     authenticated: bool,
+    scheme: SchemeOptions,
 }
 
 impl<S> Service for Authentication<S> {
