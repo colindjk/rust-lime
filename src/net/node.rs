@@ -73,6 +73,8 @@ impl<S> Service for Handshake<S> {
 }
 
 /// This will be the future representing the authentication process.
+///
+/// TODO: Include a password attempt future which will be a 'helper future' of sorts
 pub struct Authentication<S> {
     conn: Option<ClientConnection<S>>,
     peers: NodeMap<S>, // TODO: Make this a ref to something more pertinent.
