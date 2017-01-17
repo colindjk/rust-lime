@@ -1,4 +1,5 @@
 pub mod node;
+pub mod handshake;
 
 use std::net::SocketAddr;
 use std::convert::{From};
@@ -18,6 +19,9 @@ use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
 // TODO : Refactor to make sense
 pub use self::node::*;
 
+pub trait EnvStream: Stream<Item=Envelope, Error=io::Error> +
+                     Sink<SinkItem=Envelope, SinkError=io::Error> {  }
+
 // TODO: Put a Mutex around that ClientSink!
 type NodeMap<S> = Arc<Mutex<HashMap<Node, ClientSink<S>>>>;
 type ArcMut<T> = Arc<Mutex<T>>;
@@ -34,8 +38,7 @@ pub struct LimeServer<S> {
 
 /// Implementation of the LimeServer. Provides functionality for accepting
 /// connections, and providing Nodes in an un-authenticated state.
-impl<S> LimeServer<S>
-    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
+impl<S: EnvStream> LimeServer<S>
 {
     /// Creates a new server from a TcpListener.
     /// TODO: Try to figure out Websockets, HTTP etc.

@@ -18,7 +18,7 @@ use envelope::session::{
 };
 use user::{User};
 
-use super::NodeMap;
+use super::{NodeMap, EnvStream};
 
 type FutEnvelope = Future<Item=Envelope, Error=io::Error>;
 
@@ -28,24 +28,18 @@ type FutEnvelope = Future<Item=Envelope, Error=io::Error>;
 /// Field 'user' pertain to potentially logged in user.
 /// The client connection will be split once authenticated via 'Session'
 /// envelopes.
-pub struct ClientConnection<S> {
-    inner: Box<S>,
-}
+pub struct ClientConnection<S> { inner: S }
 
 /// Implementation
 /// TODO: Create an error type for connection stuff.
 /// Note:
 /// -   Either have two error types, one for critical errors w/ system crash & bang
 /// -   Or one error type and pass it up or handle it / panic when deemed appropriate.
-impl<S> ClientConnection<S>
-    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
-{
-    pub fn new(io: S) -> Self { ClientConnection { inner: Box::new(io) } }
+impl<S: EnvStream> ClientConnection<S> {
+    pub fn new(io: S) -> Self { ClientConnection { inner: io } }
 }
 
-impl<S> Stream for ClientConnection<S>
-    where S: Stream<Item=Envelope, Error=io::Error> + Sink<SinkItem=Envelope>
-{
+impl<S: EnvStream> Stream for ClientConnection<S> {
     type Item = Envelope;
     type Error = io::Error;
 
@@ -64,7 +58,7 @@ pub struct TcpHandshake {
     compression: CompressionOptions,
 }
 
-impl Service for Handshake {
+impl Service for TcpHandshake {
     type Request = Session;
     type Response = Session;
     type Error = io::Error;
@@ -75,16 +69,15 @@ impl Service for Handshake {
     }
 }
 
-impl Future for Handshake
-{
-    type Item = Authentication<S>;
-    type Error = io::Error;
+//impl Future for Handshake {
+    //type Item = Authentication<EnvStream>;
+    //type Error = io::Error;
 
-    /// This is where some sort of database query would occur.
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        unimplemented!()
-    }
-}
+    ///// This is where some sort of database query would occur.
+    //fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        //unimplemented!()
+    //}
+//}
 
 /// This will be the future representing the authentication process.
 ///
@@ -109,18 +102,14 @@ impl<S> Service for Authentication<S> {
     }
 }
 
-impl<S> Authentication<S>
-    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
-{
+impl<S> Authentication<S> {
     /// TODO: Implement an authentication update thingy.
     pub fn update_auth(&mut self, envelope: Session) {
         self.authenticated = true;
     }
 }
 
-impl<S> Future for Authentication<S>
-    where S: Stream<Item=Envelope, Error=io::Error> + Sink<SinkItem=Envelope>
-{
+impl<S: EnvStream> Future for Authentication<S> {
     type Item = (ClientSink<S>, ClientSession<S>);
     type Error = io::Error;
 
@@ -174,9 +163,7 @@ pub struct ClientSession<S> {
 ///
 /// ClientSession implements the Service trait to avoid having a blocking event
 /// occur on the stream of incoming messages when not necessary.
-impl<S> Service for ClientSession<S>
-    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
-{
+impl<S> Service for ClientSession<S> {
     type Request = Envelope;
     type Response = Envelope;
     type Error = io::Error;
@@ -187,9 +174,7 @@ impl<S> Service for ClientSession<S>
     }
 }
 
-impl<S> ClientSession<S>
-    where S: Stream<Item=Envelope> + Sink<SinkItem=Envelope>
-{
+impl<S> ClientSession<S> {
     pub fn new(io: S) -> Self {
         panic!()
     }
@@ -212,10 +197,9 @@ impl<S> ClientSink<S>
 //impl Service 
 
 /// 'Io'
-impl<S> From<S> for ClientConnection<EnvelopeStream<S>> where S: Io {
+impl<S: EnvStream> From<S> for ClientConnection<S> {
     fn from(io: S) -> Self {
-        let stream = io.framed(LimeCodec);
-        ClientConnection { inner: Box::new(stream) }
+        ClientConnection { inner: io }
     }
 }
 
@@ -225,7 +209,7 @@ impl From<(TcpStream, SocketAddr)>
     fn from(connection: (TcpStream, SocketAddr)) -> Self {
         let (stream, _) = connection;
         let stream = stream.framed(LimeCodec);
-        ClientConnection { inner: Box::new(stream) }
+        ClientConnection { inner: stream }
     }
 }
 
