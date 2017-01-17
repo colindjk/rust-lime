@@ -14,7 +14,7 @@ extern crate serde_urlencoded;
 #[macro_use]
 extern crate serde_derive;
 
-pub mod net;
+pub mod server;
 pub mod user;
 //pub mod client; // temporary, the client will be back!
 #[macro_use]
