@@ -1,5 +1,5 @@
 [package]
-name = "protocol_manager"
+name = "rust-lime"
 version = "0.1.0"
 authors = ["kibbles <colindjk@gmail.com>"]
 
