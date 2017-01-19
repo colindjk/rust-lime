@@ -69,16 +69,6 @@ impl Service for TcpHandshake {
     }
 }
 
-//impl Future for Handshake {
-    //type Item = Authentication<EnvStream>;
-    //type Error = io::Error;
-
-    ///// This is where some sort of database query would occur.
-    //fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        //unimplemented!()
-    //}
-//}
-
 /// This will be the future representing the authentication process.
 ///
 /// TODO: Include a password attempt future which will be a 'helper future' of sorts
