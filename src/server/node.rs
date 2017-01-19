@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 use std::convert::From;
-use std::io;
+use std::io::Error as IoError;
 use std::sync::Arc;
 
 use futures::{stream, future, sync, Future, BoxFuture, Stream, Sink, Async, Poll};
@@ -20,7 +20,7 @@ use user::{User};
 
 use super::{NodeMap, EnvStream};
 
-type FutEnvelope = Future<Item=Envelope, Error=io::Error>;
+type FutEnvelope = Box<Future<Item=Envelope, Error=IoError> + Send>;
 
 /// A client connection is created per incoming connection.
 ///
@@ -41,7 +41,7 @@ impl<S: EnvStream> ClientConnection<S> {
 
 impl<S: EnvStream> Stream for ClientConnection<S> {
     type Item = Envelope;
-    type Error = io::Error;
+    type Error = IoError;
 
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
         self.inner.poll()
@@ -61,7 +61,7 @@ pub struct TcpHandshake {
 impl Service for TcpHandshake {
     type Request = Session;
     type Response = Session;
-    type Error = io::Error;
+    type Error = IoError;
     type Future = BoxFuture<Self::Response, Self::Error>;
 
     fn call(&self, req: Self::Request) -> Self::Future {
@@ -71,7 +71,7 @@ impl Service for TcpHandshake {
 
 //impl Future for Handshake {
     //type Item = Authentication<EnvStream>;
-    //type Error = io::Error;
+    //type Error = IoError;
 
     ///// This is where some sort of database query would occur.
     //fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
@@ -94,7 +94,7 @@ pub struct Authentication<S> {
 impl<S> Service for Authentication<S> {
     type Request = Session;
     type Response = Session;
-    type Error = io::Error;
+    type Error = IoError;
     type Future = BoxFuture<Self::Response, Self::Error>;
 
     fn call(&self, req: Self::Request) -> Self::Future {
@@ -111,7 +111,7 @@ impl<S> Authentication<S> {
 
 impl<S: EnvStream> Future for Authentication<S> {
     type Item = (ClientSink<S>, ClientSession<S>);
-    type Error = io::Error;
+    type Error = IoError;
 
     /// This is where some sort of database query would occur.
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
@@ -166,7 +166,7 @@ pub struct ClientSession<S> {
 impl<S> Service for ClientSession<S> {
     type Request = Envelope;
     type Response = Envelope;
-    type Error = io::Error;
+    type Error = IoError;
     type Future = Box<FutEnvelope>;
 
     fn call(&self, req: Envelope) -> Self::Future {

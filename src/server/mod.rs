@@ -3,7 +3,7 @@ pub mod handshake;
 
 use std::net::SocketAddr;
 use std::convert::{From};
-use std::io;
+use std::io::Error as IoError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -19,8 +19,8 @@ use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
 // TODO : Refactor to make sense
 pub use self::node::*;
 
-pub trait EnvStream: Stream<Item=Envelope, Error=io::Error> +
-                     Sink<SinkItem=Envelope, SinkError=io::Error> {  }
+pub trait EnvStream: Stream<Item=Envelope, Error=IoError> +
+                     Sink<SinkItem=Envelope, SinkError=IoError> {  }
 
 // TODO: Put a Mutex around that ClientSink!
 type NodeMap<S> = Arc<Mutex<HashMap<Node, ClientSink<S>>>>;

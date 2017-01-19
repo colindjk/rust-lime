@@ -1,4 +1,5 @@
 #![feature(proc_macro, custom_attribute, custom_derive, plugin)]
+#![feature(associated_type_defaults)]
 #![feature(conservative_impl_trait)]
 #![plugin(serde_derive)]
 
