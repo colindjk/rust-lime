@@ -10,7 +10,7 @@ use tokio_core::io::{Io};
 use tokio_core::net::{TcpStream};
 use tokio_service::{Service, NewService};
 
-use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope,
+use envelope::{Node, LimeCodec, EnvelopeStream, Envelope,
     Session,
 };
 use envelope::session::{
@@ -23,7 +23,7 @@ use user::{User};
 use super::{NodeMap, EnvStream};
 use super::handshake::Handshake;
 
-type FutEnvelope = Box<Future<Item=Envelope, Error=IoError> + Send>;
+type EnvFuture = Box<Future<Item=Envelope, Error=IoError> + Send>;
 
 /// A client connection is created per incoming connection.
 ///
@@ -163,7 +163,7 @@ impl<S> Service for ClientSession<S> {
     type Request = Envelope;
     type Response = Envelope;
     type Error = IoError;
-    type Future = Box<FutEnvelope>;
+    type Future = EnvFuture;
 
     fn call(&self, req: Envelope) -> Self::Future {
         unimplemented!()

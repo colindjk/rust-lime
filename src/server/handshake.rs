@@ -3,7 +3,7 @@ use std::io::Error as IoError;
 use futures::{Future, Poll, Stream, Sink, Async};
 use tokio_core::{net, io};
 
-use envelope::{ LimeCodec, Session, SealedEnvelope as Envelope };
+use envelope::{ LimeCodec, Session, Envelope };
 use super::{EnvStream};
 use super::node::Authentication;
 

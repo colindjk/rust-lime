@@ -21,7 +21,7 @@ pub mod user;
 pub mod envelope; // protocol src
 pub mod utils;
 
-use envelope::SealedEnvelope as Envelope;
+use envelope::Envelope as Envelope;
 
 pub struct EnvelopeError {
     envelope: Envelope,

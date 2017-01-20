@@ -6,7 +6,7 @@ use tokio_core::io::{
 
 use std::io;
 use std::str;
-use envelope::{ SealedEnvelope, DELIMITER };
+use envelope::{ Envelope, DELIMITER };
 
 /// Type used by the Node structs for input and output, allowing a user to
 /// set up a Node which communicates over any type of network connection.
@@ -14,8 +14,8 @@ pub type EnvelopeStream<T> = Framed<T, LimeCodec>;
 pub struct LimeCodec;
 
 impl Codec for LimeCodec {
-    type In = SealedEnvelope;
-    type Out = SealedEnvelope;
+    type In = Envelope;
+    type Out = Envelope;
 
     fn decode(&mut self, buf: &mut EasyBuf)
             -> Result<Option<Self::In>, io::Error> {
@@ -23,7 +23,7 @@ impl Codec for LimeCodec {
             Some(index) => {
                 let buf = buf.drain_to(index + 1);
                 use serde_json::from_slice;
-                if let Ok(e) = from_slice::<SealedEnvelope>(buf.as_slice()) {
+                if let Ok(e) = from_slice::<Envelope>(buf.as_slice()) {
                     Ok(Some(e))
                 } else {
                     Err(io::Error::new(
@@ -52,8 +52,8 @@ impl Codec for LimeCodec {
 pub struct LimeMultiCodec;
 
 impl Codec for LimeMultiCodec {
-    type In = (u64, SealedEnvelope);
-    type Out = (u64, SealedEnvelope);
+    type In = (u64, Envelope);
+    type Out = (u64, Envelope);
 
     fn decode(&mut self, buf: &mut EasyBuf)
             -> Result<Option<Self::In>, io::Error> {

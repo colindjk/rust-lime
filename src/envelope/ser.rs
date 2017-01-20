@@ -5,7 +5,7 @@ use serde::de::{Visitor, MapVisitor};
 use serde_json::Map;
 
 use envelope::{
-    SealedEnvelope,
+    Envelope,
     Message,
     Notification,
     Command,
@@ -16,17 +16,17 @@ use envelope::helper::*;
 
 /// Deserialization implementation distinguishes the specific type of 'frame'
 /// being received.
-impl Deserialize for SealedEnvelope {
+impl Deserialize for Envelope {
     fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
         where D: Deserializer
     {
         struct EnvelopeVisitor;
 
         impl Visitor for EnvelopeVisitor {
-            type Value = SealedEnvelope;
+            type Value = Envelope;
 
             fn visit_map<V>(&mut self, mut vis: V)
-                            -> Result<SealedEnvelope, V::Error>
+                            -> Result<Envelope, V::Error>
                 where V: MapVisitor,
             {
                 let mut to          = None;
@@ -88,7 +88,7 @@ impl Deserialize for SealedEnvelope {
                 // TODO: Match all fields which are at some point required.
                 Ok(match (content, event, method, state, id, mime_type) {
                     (Some(content), None, None, None, id, Some(mime_type)) => {
-                        SealedEnvelope::Message(Message {
+                        Envelope::Message(Message {
                             to: to,
                             from: from,
                             pp: pp,
@@ -100,7 +100,7 @@ impl Deserialize for SealedEnvelope {
                     }
                     (None, Some(event), None, None, Some(id), None) => {
                         let event = into_event(event, reason);
-                        SealedEnvelope::Notification(Notification {
+                        Envelope::Notification(Notification {
                             to: to,
                             from: from,
                             pp: pp,
@@ -111,7 +111,7 @@ impl Deserialize for SealedEnvelope {
                     }
                     (None, None, Some(method), None, id, mime_type) => {
                         let status = into_status(status, reason);
-                        SealedEnvelope::Command(Command {
+                        Envelope::Command(Command {
                             to: to,
                             from: from,
                             pp: pp,
@@ -125,7 +125,7 @@ impl Deserialize for SealedEnvelope {
                     }
                     (None, None, None, Some(state), Some(id), None) => {
                         let state = into_state(state, reason);
-                        SealedEnvelope::Session(Session {
+                        Envelope::Session(Session {
                             to: to,
                             from: from,
                             pp: pp,
@@ -149,11 +149,11 @@ impl Deserialize for SealedEnvelope {
     }
 }
 
-impl Serialize for SealedEnvelope {
+impl Serialize for Envelope {
     fn serialize<S>(&self, serializer: &mut S)
             -> Result<(), S::Error> where S: Serializer
     {
-        use envelope::SealedEnvelope::*;
+        use envelope::Envelope::*;
         match *self {
             Message(ref val)      => val.serialize(serializer),
             Notification(ref val) => val.serialize(serializer),

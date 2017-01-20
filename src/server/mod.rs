@@ -14,7 +14,7 @@ use tokio_core::net;
 use tokio_core::reactor;
 
 // the locals
-use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
+use envelope::{Node, LimeCodec, EnvelopeStream, Envelope};
 
 // TODO : Refactor to make sense
 pub use self::node::*;
@@ -37,6 +37,8 @@ type ArcMut<T> = Arc<Mutex<T>>;
 pub struct LimeServer<S> {
     addr: SocketAddr,
     users: NodeMap<S>,
+    num_threads: usize,
+    handles: Vec<reactor::Remote>, // where each handle should be a 
 }
 
 /// Implementation of the LimeServer. Provides functionality for accepting
@@ -48,7 +50,15 @@ impl<S: EnvStream> LimeServer<S>
     pub fn new(addr: &SocketAddr) -> Self {
         LimeServer {
             addr: addr.clone(),
-            users: Arc::new(Mutex::new(HashMap::new()))
+            users: Arc::new(Mutex::new(HashMap::new())),
+            num_threads: 1,
+            handles: Vec::new(), // where each handle should be a 
         }
     }
+
+    /// Consumes and executes the Server
+    pub fn run(self) -> Result<(), IoError> {
+        unimplemented!();
+    }
+
 }

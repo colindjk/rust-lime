@@ -44,7 +44,7 @@ pub enum EnvelopeType {
 /// Outlines the kinds of envelopes one can receive.
 /// TODO: Resource field as separate struct, uri?
 #[derive(Debug)]
-pub enum SealedEnvelope {
+pub enum Envelope {
     Message(Message),
     Notification(Notification),
     Command(Command),
@@ -52,9 +52,9 @@ pub enum SealedEnvelope {
     Unknown(JsonMap),
 }
 
-impl SealedEnvelope {
+impl Envelope {
     pub fn id(&self) -> Option<MsgID> {
-        use self::SealedEnvelope::*;
+        use self::Envelope::*;
         match *self {
             Message(ref val) => val.id,
             Notification(ref val) => Some(val.id),
@@ -69,18 +69,34 @@ impl SealedEnvelope {
     }
 }
 
-// TODO : Create the Node object n stuff.
-//#[derive(PartialEq, Clone, Copy, Debug)]
-//pub struct Node<'a> {
-    //user_id: &'a str,
-    //domain: &'a str,
-    //instance: &'a str,
-//}
+impl Into<Envelope> for Message {
+    fn into(self) -> Envelope {
+        Envelope::Message(self)
+    }
+}
+
+impl Into<Envelope> for Notification {
+    fn into(self) -> Envelope {
+        Envelope::Notification(self)
+    }
+}
+
+impl Into<Envelope> for Command {
+    fn into(self) -> Envelope {
+        Envelope::Command(self)
+    }
+}
+
+impl Into<Envelope> for Session {
+    fn into(self) -> Envelope {
+        Envelope::Session(self)
+    }
+}
 
 /// Trait for all envelope related types.
 /// TODO: Include 'pp' and 'metadata'
 /// TODO: Convert to MIME
-pub trait Envelope {
+pub trait EnvelopeTrait {
     //type Ty;
 
     //fn unique<'a>() -> &'a str;
