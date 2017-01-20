@@ -1,4 +1,4 @@
-extern crate protocol_manager as rust_lime;
+extern crate rust_lime;
 extern crate serde_json;
 
 use rust_lime::envelope::SealedEnvelope;

@@ -20,10 +20,13 @@ use envelope::{Node, LimeCodec, EnvelopeStream, SealedEnvelope as Envelope};
 pub use self::node::*;
 
 pub trait EnvStream: Stream<Item=Envelope, Error=IoError> +
-                     Sink<SinkItem=Envelope, SinkError=IoError> {  }
+                     Sink<SinkItem=Envelope, SinkError=IoError> {}
+
+impl<S> EnvStream for S where S: Stream<Item=Envelope, Error=IoError> +
+                                 Sink<SinkItem=Envelope, SinkError=IoError> {}
 
 // TODO: Put a Mutex around that ClientSink!
-type NodeMap<S> = Arc<Mutex<HashMap<Node, ClientSink<S>>>>;
+type NodeMap<S> = Arc<Mutex<HashMap<Node, node::ClientSink<S>>>>;
 type ArcMut<T> = Arc<Mutex<T>>;
 
 /// Generally it will be used to accept incoming connections.

@@ -1,10 +1,12 @@
 use std::net::SocketAddr;
 use std::convert::From;
 use std::io::Error as IoError;
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 use futures::{stream, future, sync, Future, BoxFuture, Stream, Sink, Async, Poll};
-use tokio_core::io::{Io, Framed};
+use tokio_core::io;
+use tokio_core::io::{Io};
 use tokio_core::net::{TcpStream};
 use tokio_service::{Service, NewService};
 
@@ -19,6 +21,7 @@ use envelope::session::{
 use user::{User};
 
 use super::{NodeMap, EnvStream};
+use super::handshake::Handshake;
 
 type FutEnvelope = Box<Future<Item=Envelope, Error=IoError> + Send>;
 
@@ -52,20 +55,23 @@ impl<S: EnvStream> Stream for ClientConnection<S> {
 ///
 /// Handshake, also known as the 'Negotiating' phase of the overall session.
 pub struct TcpHandshake {
-    conn: Option<Framed<TcpStream, LimeCodec>>,
+    conn: Option<io::Framed<TcpStream, LimeCodec>>,
     user_id: Option<Node>,
     encryption: EncryptionOptions,
     compression: CompressionOptions,
 }
 
-impl Service for TcpHandshake {
-    type Request = Session;
-    type Response = Session;
-    type Error = IoError;
-    type Future = BoxFuture<Self::Response, Self::Error>;
+impl Handshake for TcpHandshake {
+    type Stream = io::Framed<TcpStream, LimeCodec>;
 
-    fn call(&self, req: Self::Request) -> Self::Future {
-        future::ok(req).boxed()
+    fn take_stream(&mut self, tcp: TcpStream) {
+        self.conn = Some(tcp.framed(LimeCodec));
+    }
+
+    fn drop_stream(&mut self) { self.conn = None; }
+
+    fn update_handshake(&mut self) -> Poll<Self::Stream, IoError> {
+        Ok(Async::Ready(self.conn.take().unwrap()))
     }
 }
 
