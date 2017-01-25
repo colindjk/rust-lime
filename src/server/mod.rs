@@ -56,9 +56,14 @@ impl<S: EnvStream> LimeServer<S>
         }
     }
 
+    /// Helper function to run in beginning of run function.
+    fn spawn_threads(&mut self) {
+
+    }
+
     /// Consumes and executes the Server
     pub fn run(self) -> Result<(), IoError> {
-        unimplemented!();
+        unimplemented!()
     }
 
 }

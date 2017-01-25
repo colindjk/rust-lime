@@ -1,13 +1,18 @@
 use std::net::SocketAddr;
 use std::convert::From;
 use std::io::Error as IoError;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
-use futures::{stream, future, sync, Future, BoxFuture, Stream, Sink, Async, Poll};
+use futures::{sink, stream, future, sync, Future, BoxFuture, Stream, Sink, Async,
+    Poll,
+    StartSend
+};
 use tokio_core::io;
 use tokio_core::io::{Io};
 use tokio_core::net::{TcpStream};
+use tokio_core::reactor::Remote;
+
 use tokio_service::{Service, NewService};
 
 use envelope::{Node, LimeCodec, EnvelopeStream, Envelope,
@@ -40,6 +45,8 @@ pub struct ClientConnection<S> { inner: S }
 /// -   Or one error type and pass it up or handle it / panic when deemed appropriate.
 impl<S: EnvStream> ClientConnection<S> {
     pub fn new(io: S) -> Self { ClientConnection { inner: io } }
+
+    pub fn into_inner(self) -> S { self.inner }
 }
 
 impl<S: EnvStream> Stream for ClientConnection<S> {
@@ -48,6 +55,19 @@ impl<S: EnvStream> Stream for ClientConnection<S> {
 
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
         self.inner.poll()
+    }
+}
+
+impl<S: EnvStream> Sink for ClientConnection<S> {
+    type SinkItem = Envelope;
+    type SinkError = IoError;
+
+    fn start_send(&mut self, env: Envelope) -> StartSend<Self::SinkItem, IoError> {
+        self.inner.start_send(env)
+    }
+
+    fn poll_complete(&mut self) -> Poll<(), IoError> {
+        self.inner.poll_complete()
     }
 }
 
@@ -68,10 +88,8 @@ impl Handshake for TcpHandshake {
         self.conn = Some(tcp.framed(LimeCodec));
     }
 
-    fn drop_stream(&mut self) { self.conn = None; }
-
-    fn update_handshake(&mut self) -> Poll<Self::Stream, IoError> {
-        Ok(Async::Ready(self.conn.take().unwrap()))
+    fn update_handshake(&mut self) -> Poll<Option<Self::Stream>, IoError> {
+        Ok(Async::Ready(self.conn.take()))
     }
 }
 
@@ -127,12 +145,12 @@ impl<S: EnvStream> Future for Authentication<S> {
         };
 
         if self.authenticated {
-            let conn = self.conn.take().unwrap();
-            let (sink, session) = sync::BiLock::new(conn);
+            let conn = self.conn.take().unwrap().into_inner();
+            let (sink, stream) = conn.split();
             Ok(Async::Ready((
-                ClientSink { inner: sink, },
+                ClientSink::new(sink),
                 ClientSession {
-                    inner: session,
+                    inner: stream,
                     user_id: self.user_id.take().unwrap(),
                     user: User,
                     peers: self.peers.clone(),
@@ -149,7 +167,7 @@ impl<S: EnvStream> Future for Authentication<S> {
 ///
 /// Created as a part of a succesful login.
 pub struct ClientSession<S> {
-    inner: sync::BiLock<ClientConnection<S>>,
+    inner: stream::SplitStream<S>,
     user_id: Node,
     user: User,
     peers: NodeMap<S>,
@@ -179,14 +197,81 @@ impl<S> ClientSession<S> {
 /// Designed to make it easier to send over a connection / channel.
 /// Not sure what else.
 pub struct ClientSink<S> {
-    inner: sync::BiLock<ClientConnection<S>>,
+    inner: Mutex<Option<stream::SplitSink<S>>>,
+    queue: VecDeque<Envelope>,
+    handle: Remote,
 }
 
-impl<S> ClientSink<S>
-    where S: Sink<SinkItem=Envelope>
-{
-    pub fn new(io: S) -> Self {
-        panic!()
+/// Runs a future where it's goal is to return the `Stream`.
+struct SinkCourier<S> {
+    cur: Option<stream::SplitSink<S>>,
+    inner: Arc<Mutex<Option<stream::SplitSink<S>>>>,
+}
+
+impl<S: EnvStream> Future for SinkCourier<S> {
+    type Item = ();
+    type Error = IoError;
+
+    /// This is where some sort of database query would occur.
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        match self.cur.as_mut().unwrap().poll() {
+            Ok(Async::Ready(Some(env))) => {
+            },
+            Ok(Async::Ready(None)) => panic!("Implement EOF during authentication"),
+            Ok(Async::NotReady) => return Ok(Async::NotReady),
+            Err(_) => panic!("Error envelope from stream \
+                                    during Authentication"),
+        };
+    }
+}
+
+impl<S: EnvStream> ClientSink<S> {
+    type Sender = sink::Send<stream::SplitSink<S>>;
+
+    pub fn new(io: stream::SplitSink<S>) -> Self {
+        ClientSink {
+            inner: Arc::new(Mutex::new(Some(io))),
+            queue: VecDeque::new(),
+        }
+    }
+
+    /// Attempts to send the next message stored in a queue, returning 
+    pub fn try_send_next(&mut self) -> bool {
+        if self.queue.is_empty() { return false; }
+        match self.inner.take() {
+            Some(sink) => {
+                let send = sink.send(self.queue.pop_front().unwrap());
+                let send = send.and_then(|sink| {
+
+                });
+                self.handle.spawn();
+            },
+            None => false,
+        }
+    }
+
+    /// Attempts to send an envelope over the internal `Sink` struct. Fails if
+    /// the `Sink` is currently occupied.
+    fn send_next(&mut self, msg: Envelope)
+        -> Option<sink::Send<stream::SplitSink<S>>>
+    {
+        match self.inner.take() {
+            Some(sink) => {
+                let msg = if let Some(env) = self.queue.pop_front() {
+                    self.queue.push_back(msg);
+                    env
+                } else { msg }
+                sink.send(msg)
+            },  // sends either the given or next available message.
+            None => {
+                queue.push_back(msg);
+                None
+            },
+        } 
+    }
+
+    /// Guarantees the delivery of an envelope via an internal `VecDeque`.
+    pub fn send_envelope(&mut self, msg: Envelope) {
     }
 }
 

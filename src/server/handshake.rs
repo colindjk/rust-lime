@@ -17,24 +17,22 @@ pub trait Handshake {
 
     fn take_stream(&mut self, tcp: net::TcpStream);
 
-    fn drop_stream(&mut self);
-
     /// A 'Session' envelope is provided if a new one arrives, otherwise the
     /// value was simply poll'd.
     ///
     /// This trait will remain a bit "open", other parts of the project are a
     /// much higher priority than the handshake, so this trait will remain
     /// simple until further development can occur.
-    fn update_handshake(&mut self) -> Poll<Self::Stream, IoError>;
+    fn update_handshake(&mut self) -> Poll<Option<Self::Stream>, IoError>;
     // TODO: Fix this ambiguous Request / Response situation.
 }
 
 /// TODO: Change this to a Stream implementation
-impl<S: EnvStream> Future for Handshake<Stream=S> {
+impl<S: EnvStream> Stream for Handshake<Stream=S> {
     type Item = S;
     type Error = IoError;
 
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
         self.update_handshake()
     }
 }
